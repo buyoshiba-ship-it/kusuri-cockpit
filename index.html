@@ -1,0 +1,2782 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PharmaWatch | 医薬品供給監視コックピット</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --border: #e2e8f0;
+      --border-subtle: #edf2f7;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --text-subtle: #94a3b8;
+      --primary: #0f172a;
+      
+      --success: #15803d;
+      --success-bg: #ecfdf5;
+      --success-border: #a7f3d0;
+
+      --warning: #b45309;
+      --warning-bg: #fef08a;
+      --warning-border: #facc15;
+      --warning-card-border: #eab308;
+
+      --danger: #b91c1c;
+      --danger-bg: #fecaca;
+      --danger-border: #f87171;
+      --danger-card-border: #ef4444;
+
+      --radius: 12px;
+      --radius-sm: 6px;
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', 'Noto Sans JP', -apple-system, BlinkMacSystemFont, sans-serif;
+      line-height: 1.5;
+      padding: 32px 20px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .container {
+      max-width: 100%;
+      margin: 0 auto;
+      padding: 0 12px;
+    }
+
+    /* ヘッダー */
+    header {
+      margin-bottom: 20px;
+    }
+
+    .brand-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 4px 10px;
+      border-radius: 9999px;
+      margin-bottom: 12px;
+    }
+
+    .pulse-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--success);
+      box-shadow: 0 0 0 2px rgba(21, 128, 61, 0.2);
+    }
+
+    h1 {
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+
+    p.subtitle {
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    /* 目立つモード切り替えタブエリア */
+    .view-tabs-container {
+      background: #e2e8f0;
+      padding: 5px;
+      border-radius: 10px;
+      display: inline-flex;
+      gap: 6px;
+      margin-bottom: 20px;
+      width: 100%;
+      max-width: 680px;
+      box-shadow: inset 0 1px 2px rgba(0,0,0,0.06);
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 10px 18px;
+      font-size: 14px;
+      font-weight: 600;
+      border-radius: 8px;
+      border: none;
+      background: transparent;
+      color: #475569;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+
+    .tab-btn:hover {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.6);
+    }
+
+    .tab-btn.active {
+      background: #ffffff;
+      color: var(--text);
+      box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+    }
+
+    .unregistered-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 9999px;
+      background: #ef4444;
+      color: #ffffff;
+      box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
+      animation: pulse-badge 2s infinite ease-in-out;
+    }
+
+    @keyframes pulse-badge {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+
+    .registered-badge {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 9999px;
+      background: #dcfce7;
+      color: #15803d;
+      border: 1px solid #bbf7d0;
+    }
+
+    .tab-badge-normal {
+      font-size: 11px;
+      padding: 2px 7px;
+      border-radius: 9999px;
+      background: #cbd5e1;
+      color: #334155;
+    }
+
+    /* 採用薬アップロード専用ドロップゾーン */
+    .upload-box {
+      background: var(--surface);
+      border: 2px dashed #94a3b8;
+      border-radius: var(--radius);
+      padding: 28px 24px;
+      text-align: center;
+      margin-bottom: 20px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    }
+
+    .upload-box:hover, .upload-box.dragover {
+      border-color: #2563eb;
+      background: #eff6ff;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 12px -2px rgba(37, 99, 235, 0.12);
+    }
+
+    .upload-icon {
+      font-size: 34px;
+      margin-bottom: 6px;
+    }
+
+    .upload-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .upload-desc {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .upload-btn-fake {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 7px 16px;
+      background: #2563eb;
+      color: #ffffff;
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: 6px;
+      box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+    }
+
+    .upload-input-file {
+      display: none;
+    }
+
+    /* 採用薬アラート概要 */
+    .watchlist-summary {
+      display: none;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .summary-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .summary-title {
+      font-size: 16px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .storage-indicator {
+      font-size: 11px;
+      font-weight: normal;
+      background: #f1f5f9;
+      color: #475569;
+      padding: 2px 8px;
+      border-radius: 4px;
+      border: 1px solid #e2e8f0;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .summary-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .reupload-btn {
+      font-size: 12px;
+      font-weight: 600;
+      padding: 5px 12px;
+      background: #f1f5f9;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.1s;
+    }
+
+    .reupload-btn:hover {
+      background: #e2e8f0;
+      border-color: #cbd5e1;
+    }
+
+    .clear-btn {
+      font-size: 12px;
+      padding: 5px 10px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+
+    .clear-btn:hover {
+      background: #fee2e2;
+      color: var(--danger);
+      border-color: #fca5a5;
+    }
+
+    /* 統計グリッド */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    @media (max-width: 768px) {
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .stat-label {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .stat-value {
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--text);
+    }
+
+    .stat-sub {
+      font-size: 12px;
+      color: var(--text-subtle);
+      margin-top: 2px;
+    }
+
+    .stat-card.warning .stat-value { color: var(--warning); }
+    .stat-card.danger .stat-value { color: var(--danger); }
+    .stat-card.success .stat-value { color: var(--success); }
+    .stat-card.improved .stat-value { color: #059669; }
+    .stat-card.improved {
+      background: linear-gradient(180deg, #ffffff 0%, #f0fdf4 100%);
+      border-color: #86efac;
+    }
+
+    .watchlist-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 12px;
+      margin-bottom: 0;
+    }
+
+    @media (max-width: 900px) {
+      .watchlist-stats-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+    @media (max-width: 600px) {
+      .watchlist-stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    /* 検索パネル */
+    .search-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .search-input-wrapper {
+      position: relative;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 14px 85px 14px 44px;
+      font-size: 15px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: #fafafa;
+      color: var(--text);
+      outline: none;
+      transition: all 0.15s ease;
+      font-family: inherit;
+    }
+
+    .search-input:focus {
+      background: #ffffff;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.08);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 15px;
+      color: var(--text-subtle);
+      font-size: 16px;
+      pointer-events: none;
+    }
+
+    .clear-search-btn {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      right: 48px;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: none;
+      background: #e2e8f0;
+      color: #64748b;
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 700;
+      transition: all 0.15s ease;
+      z-index: 5;
+    }
+
+    .clear-search-btn:hover {
+      background: #cbd5e1;
+      color: #0f172a;
+    }
+
+    .clear-search-btn.active {
+      display: flex;
+    }
+
+    .mic-button {
+      position: absolute;
+      right: 10px;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s ease;
+    }
+
+    .mic-button:hover {
+      background: #f1f5f9;
+      color: var(--text);
+    }
+
+    .mic-button.listening {
+      background: #fee2e2;
+      color: #dc2626;
+      animation: pulse-mic 1.2s infinite ease-in-out;
+    }
+
+    @keyframes pulse-mic {
+      0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.4); }
+      70% { box-shadow: 0 0 0 8px rgba(220, 38, 38, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
+    }
+
+    .voice-status {
+      display: none;
+      position: absolute;
+      right: 52px;
+      font-size: 12px;
+      font-weight: 500;
+      color: #dc2626;
+      background: #fef2f2;
+      padding: 3px 8px;
+      border-radius: 4px;
+      border: 1px solid #fecaca;
+    }
+
+    .voice-status.active {
+      display: block;
+    }
+
+    .filter-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .filter-btn {
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 500;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: #ffffff;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.12s;
+    }
+
+    .filter-btn:hover {
+      background: #f1f5f9;
+      color: var(--text);
+    }
+
+    .filter-btn.active {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #ffffff;
+    }
+
+    .filter-btn-improved {
+      color: #047857;
+      border-color: #86efac;
+    }
+
+    .filter-btn-improved:hover {
+      background: #f0fdf4;
+      color: #065f46;
+    }
+
+    .filter-btn-improved.active {
+      background: #059669;
+      border-color: #059669;
+      color: #ffffff;
+    }
+
+    .filter-divider {
+      width: 1px;
+      height: 20px;
+      background: var(--border);
+      margin: 0 4px;
+    }
+
+    .reset-filters-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 5px 10px;
+      font-size: 12px;
+      font-weight: 500;
+      color: #64748b;
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all 0.15s ease;
+      margin-left: auto;
+    }
+
+    .reset-filters-btn:hover {
+      background: #e2e8f0;
+      color: #0f172a;
+      border-color: #94a3b8;
+    }
+
+    .date-select-wrapper {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .date-select {
+      appearance: none;
+      -webkit-appearance: none;
+      background: #ffffff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 10px center;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 6px 30px 6px 12px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+      cursor: pointer;
+      outline: none;
+      transition: all 0.15s ease;
+      font-family: inherit;
+    }
+
+    .date-select:hover {
+      border-color: var(--primary);
+      background-color: #f8fafc;
+    }
+
+    .date-select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.08);
+    }
+
+    .quick-searches {
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px dashed var(--border-subtle);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .quick-label {
+      font-size: 12px;
+      color: var(--text-subtle);
+      margin-right: 4px;
+    }
+
+    .quick-btn {
+      padding: 3px 8px;
+      font-size: 12px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.1s;
+    }
+
+    .quick-btn:hover {
+      border-color: var(--primary);
+      color: var(--text);
+      background: #f1f5f9;
+    }
+
+    /* リザルト & 表示モード切替 */
+    .results-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      font-size: 13px;
+      color: var(--text-muted);
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .results-count {
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .view-toggle-group {
+      display: inline-flex;
+      background: #e2e8f0;
+      padding: 2px;
+      border-radius: 6px;
+      gap: 2px;
+    }
+
+    .view-toggle-btn {
+      padding: 5px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      border: none;
+      background: transparent;
+      color: #64748b;
+      border-radius: 4px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.15s ease;
+    }
+
+    .view-toggle-btn:hover {
+      color: var(--text);
+    }
+
+    .view-toggle-btn.active {
+      background: #ffffff;
+      color: var(--primary);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+    }
+
+    /* テーブル表示スタイル（PC大画面特化 & 画面収まり最適化） */
+    .table-container {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      overflow-x: auto;
+      margin-bottom: 16px;
+      width: 100%;
+    }
+
+    .med-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      text-align: left;
+      table-layout: auto;
+    }
+
+    .med-table th {
+      background: #f8fafc;
+      color: var(--text-muted);
+      font-weight: 600;
+      padding: 6px 8px;
+      font-size: 11px;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      user-select: none;
+    }
+
+    .med-table th.sortable {
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .med-table th.sortable:hover {
+      background: #f1f5f9;
+      color: var(--text);
+    }
+
+    .med-table th.sorted-active {
+      background: #eff6ff;
+      color: var(--primary);
+    }
+
+    .sort-icon {
+      margin-left: 3px;
+      font-size: 10px;
+      opacity: 0.6;
+    }
+    .sorted-active .sort-icon {
+      opacity: 1;
+      font-weight: 700;
+    }
+
+    .med-table td {
+      padding: 5px 8px;
+      font-size: 12px;
+      border-bottom: 1px solid var(--border-subtle);
+      vertical-align: middle;
+      word-break: break-word;
+    }
+
+    .med-table tr:hover td {
+      background: #f8fafc;
+    }
+
+    /* 行左端のステータスカラーバー（ねこさんスタイル） */
+    .med-table tr td:first-child {
+      border-left: 4px solid transparent;
+    }
+    .med-table tr.tbl-status-0 td:first-child {
+      border-left: 4px solid #3b82f6; /* 通常出荷: 青バー */
+    }
+    .med-table tr.tbl-status-1 td:first-child {
+      border-left: 4px solid #f59e0b; /* 限定出荷: オレンジバー */
+    }
+    .med-table tr.tbl-status-2 td:first-child {
+      border-left: 4px solid #ef4444; /* 供給停止: 赤バー */
+    }
+
+    .med-table tr.tbl-status-1 td {
+      background: #fefef2;
+    }
+    .med-table tr.tbl-status-1:hover td {
+      background: #fef9c3;
+    }
+
+    .med-table tr.tbl-status-2 td {
+      background: #fff5f5;
+    }
+    .med-table tr.tbl-status-2:hover td {
+      background: #fee2e2;
+    }
+
+    .tbl-med-name {
+      font-weight: 600;
+      color: #2563eb;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 4px;
+      line-height: 1.35;
+      cursor: pointer;
+    }
+    .tbl-med-name:hover {
+      text-decoration: underline;
+    }
+
+    .tbl-ingredient {
+      color: #2563eb;
+      font-weight: 500;
+    }
+
+    .tbl-reason {
+      color: #dc2626;
+      font-weight: 500;
+    }
+
+    .tbl-recovery {
+      color: #dc2626;
+      font-weight: 500;
+    }
+
+    .tbl-adopted-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      padding: 2px 6px;
+      font-size: 11px;
+      font-weight: 700;
+      border-radius: 4px;
+      background: #dcfce7;
+      color: #15803d;
+      border: 1px solid #bbf7d0;
+      white-space: nowrap;
+    }
+
+    .tbl-sub-summary {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 4px;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: all 0.12s;
+    }
+    .tbl-sub-summary.has-normal {
+      background: #ecfdf5;
+      color: #047857;
+      border: 1px solid #a7f3d0;
+    }
+    .tbl-sub-summary.has-normal:hover {
+      background: #d1fae5;
+    }
+    .tbl-sub-summary.no-normal {
+      background: #fef2f2;
+      color: #b91c1c;
+      border: 1px solid #fecaca;
+    }
+    .tbl-sub-summary.no-normal:hover {
+      background: #fee2e2;
+    }
+    .tbl-sub-summary.solo {
+      background: #f8fafc;
+      color: #64748b;
+      border: 1px solid #e2e8f0;
+    }
+
+    .tbl-sub-btn {
+      padding: 3px 8px;
+      font-size: 11px;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      color: #1d4ed8;
+      border-radius: 4px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.12s;
+    }
+    .tbl-sub-btn:hover {
+      background: #dbeafe;
+    }
+
+    .card-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .med-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      transition: all 0.12s ease;
+    }
+
+    .med-card.status-0 {
+      border-left: 3px solid var(--success);
+    }
+
+    .med-card.status-1 {
+      background: #fefce8;
+      border: 1px solid var(--warning-border);
+      border-left: 4px solid var(--warning-card-border);
+    }
+
+    .med-card.status-2 {
+      background: #fff1f2;
+      border: 1px solid var(--danger-border);
+      border-left: 4px solid var(--danger-card-border);
+    }
+
+    .med-card:hover {
+      box-shadow: var(--shadow-md);
+      transform: translateY(-1px);
+    }
+
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .med-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -0.01em;
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .med-maker {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 9999px;
+      white-space: nowrap;
+      position: relative;
+    }
+
+    .badge-0 { 
+      background: #eff6ff; 
+      color: #1d4ed8; 
+      border: 1.5px solid #60a5fa;
+      box-shadow: inset 0 -2px 0 0 #3b82f6;
+    }
+    .badge-1 { 
+      background: #fffbeb; 
+      color: #b45309; 
+      border: 1.5px solid #f59e0b;
+      box-shadow: inset 0 -2px 0 0 #f59e0b;
+    }
+    .badge-2 { 
+      background: #fef2f2; 
+      color: #b91c1c; 
+      border: 1.5px solid #f87171;
+      box-shadow: inset 0 -2px 0 0 #ef4444;
+    }
+
+    .badge-group {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 6px;
+    }
+
+    /* 医薬品区分バッジ（後発、先発、基礎的、準先発、旧後） */
+    .prod-class-badge {
+      font-size: 11px;
+      font-weight: 800;
+      padding: 1px 6px;
+      border-radius: 4px;
+      line-height: 1.4;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      letter-spacing: -0.02em;
+    }
+    .prod-class-badge.tag-後 { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
+    .prod-class-badge.tag-先 { background: #e0e7ff; color: #3730a3; border: 1px solid #c7d2fe; }
+    .prod-class-badge.tag-基 { background: #f3e8ff; color: #6b21a8; border: 1px solid #e9d5ff; }
+    .prod-class-badge.tag-準先 { background: #ede9fe; color: #5b21b6; border: 1px solid #ddd6fe; }
+    .prod-class-badge.tag-旧後 { background: #ffedd5; color: #9a3412; border: 1px solid #fed7aa; }
+
+    /* トレンド矢印（⤴️改善 / ⤵️悪化） */
+    .trend-arrow {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 800;
+      margin-left: 4px;
+      padding: 1px 5px;
+      border-radius: 4px;
+      line-height: 1.2;
+    }
+    .trend-arrow.up {
+      background: #0284c7;
+      color: #ffffff;
+      box-shadow: 0 1px 2px rgba(2, 132, 199, 0.3);
+    }
+    .trend-arrow.down {
+      background: #dc2626;
+      color: #ffffff;
+      box-shadow: 0 1px 2px rgba(220, 38, 38, 0.3);
+    }
+
+    /* 出荷量バッジ（A. 通常、B. 減少、A+. 増加） */
+    .ship-volume-badge {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 4px;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+    }
+    .ship-volume-badge.vol-normal { background: #f8fafc; color: #334155; border: 1px solid #cbd5e1; }
+    .ship-volume-badge.vol-decreased { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+    .ship-volume-badge.vol-increased { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+
+    /* 更新日バッジ */
+    .update-date-badge {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-subtle);
+      background: #f1f5f9;
+      padding: 2px 7px;
+      border-radius: 4px;
+      border: 1px solid #e2e8f0;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* ステータス変化（改善・悪化）バッジ */
+    .badge-diff {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      white-space: nowrap;
+    }
+    .badge-diff.improved {
+      background: #ecfdf5;
+      color: #047857;
+      border: 1.5px solid #10b981;
+      box-shadow: 0 1px 3px rgba(16, 185, 129, 0.2);
+    }
+    .badge-diff.worsened {
+      background: #fef2f2;
+      color: #b91c1c;
+      border: 1.5px solid #ef4444;
+      box-shadow: 0 1px 3px rgba(239, 68, 68, 0.2);
+    }
+    .badge-diff-date {
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .alert-box {
+      padding: 6px 10px;
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      background: #ffffff;
+      border: 1px solid var(--border);
+    }
+
+    .alert-box.has-warning {
+      background: #fef9c3;
+      border-color: #fde047;
+      color: #854d0e;
+    }
+
+    .alert-box.has-danger {
+      background: #fee2e2;
+      border-color: #fca5a5;
+      color: #991b1b;
+    }
+
+    .alert-row {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .info-tip {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 17px;
+      height: 17px;
+      border-radius: 50%;
+      background: #0f172a;
+      color: #ffffff;
+      font-size: 10px;
+      font-weight: 700;
+      cursor: help;
+      user-select: none;
+      margin-left: 4px;
+      vertical-align: middle;
+      transition: transform 0.1s;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+    }
+
+    .info-tip:hover {
+      transform: scale(1.1);
+    }
+
+    .info-tip .tip-box {
+      visibility: hidden;
+      opacity: 0;
+      position: absolute;
+      bottom: calc(100% + 8px);
+      left: 50%;
+      transform: translateX(-50%);
+      width: 260px;
+      background: #0f172a;
+      color: #f8fafc;
+      text-align: left;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 400;
+      line-height: 1.45;
+      box-shadow: 0 10px 20px -3px rgba(0, 0, 0, 0.3);
+      z-index: 100;
+      pointer-events: none;
+      transition: opacity 0.15s ease, visibility 0.15s ease;
+    }
+
+    .info-tip .tip-box::after {
+      content: "";
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      margin-left: -5px;
+      border-width: 5px;
+      border-style: solid;
+      border-color: #0f172a transparent transparent transparent;
+    }
+
+    .info-tip:hover .tip-box {
+      visibility: visible;
+      opacity: 1;
+    }
+
+    .card-meta {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--text-muted);
+      padding-top: 4px;
+      border-top: 1px solid rgba(0,0,0,0.04);
+    }
+
+    .meta-details {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .meta-item strong {
+      color: var(--text);
+    }
+
+    .category-badge {
+      font-size: 11px;
+      font-weight: 600;
+      background: #ffffff;
+      color: #1e293b;
+      border: 1px solid #cbd5e1;
+      padding: 2px 8px;
+      border-radius: 4px;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .substitute-btn {
+      padding: 5px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      color: #1e293b;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.15s;
+    }
+
+    .substitute-btn:hover {
+      background: #0f172a;
+      color: #ffffff;
+      border-color: #0f172a;
+    }
+
+    .substitute-panel {
+      display: none;
+      margin-top: 8px;
+      padding: 12px 14px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      box-shadow: inset 0 1px 2px rgba(0,0,0,0.02);
+    }
+
+    .substitute-panel.open {
+      display: block;
+      animation: fadeIn 0.15s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .substitute-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: #334155;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .substitute-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .sub-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 10px;
+      background: #f8fafc;
+      border-radius: 6px;
+      font-size: 12px;
+      border: 1px solid #edf2f7;
+    }
+
+    .sub-item:hover {
+      background: #f1f5f9;
+    }
+
+    .sub-name {
+      font-weight: 600;
+      color: #0f172a;
+    }
+
+    .sub-maker {
+      color: var(--text-muted);
+      font-size: 11px;
+    }
+
+    .sub-badge {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 4px;
+      white-space: nowrap;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      background: var(--surface);
+      border-radius: var(--radius);
+      border: 1px dashed var(--border);
+      color: var(--text-muted);
+    }
+
+    .load-more-wrapper {
+      margin-top: 24px;
+      margin-bottom: 32px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .load-more-btn {
+      width: 100%;
+      max-width: 420px;
+      padding: 13px 20px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: var(--shadow-sm);
+      transition: all 0.15s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-family: inherit;
+    }
+
+    .load-more-btn:hover {
+      background: #f1f5f9;
+      border-color: #cbd5e1;
+      box-shadow: var(--shadow-md);
+      transform: translateY(-1px);
+    }
+
+    .all-loaded-notice {
+      color: var(--text-subtle);
+      font-size: 13px;
+      padding: 16px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <div class="brand-tag">
+        <span class="pulse-dot"></span>
+        厚労省 公開データ連動（16,403品目）
+      </div>
+      <h1>医薬品供給監視コックピット</h1>
+      <p class="subtitle">MR・薬剤師のための供給情報クイック照合ダッシュボード</p>
+    </header>
+
+    <!-- 目立つモード切り替えタブ -->
+    <div class="view-tabs-container">
+      <button class="tab-btn active" id="tab-all" onclick="switchTab('all')">
+        <span>🌐 全品目データベース</span>
+        <span class="tab-badge-normal">1.6万件</span>
+      </button>
+      <button class="tab-btn" id="tab-watchlist" onclick="switchTab('watchlist')">
+        <span>🏥 自薬局 採用薬監視</span>
+        <span id="tab-watch-badge-container">
+          <span class="unregistered-badge">● 未登録（ここをクリック）</span>
+        </span>
+      </button>
+    </div>
+
+    <!-- 採用薬アップロード専用エリア（自薬局タブ選択時） -->
+    <div id="upload-section" style="display: none;">
+      
+      <!-- ドラッグ＆ドロップ枠 -->
+      <div class="upload-box" id="drop-zone" onclick="document.getElementById('file-input').click()">
+        <input type="file" id="file-input" class="upload-input-file" accept=".csv,.txt">
+        <div class="upload-icon">📂</div>
+        <div class="upload-title">薬局の採用薬リスト（CSV / テキスト）をここにドラッグ＆ドロップ</div>
+        <div class="upload-desc">
+          またはここをクリックしてファイルを選択<br>
+          <span style="font-size:12px; color:var(--text-subtle);">※レセコンや在庫システムから出力したCSVをそのまま投入できます（自動で医薬品名・コードを抽出）</span>
+        </div>
+        <div>
+          <span class="upload-btn-fake">ファイルを選択して照合する</span>
+        </div>
+      </div>
+
+      <!-- 採用薬アラート概要 -->
+      <div id="watchlist-summary" class="watchlist-summary">
+        <div class="summary-header">
+          <div class="summary-title">
+            <span>🏥 登録採用薬の供給チェック結果</span>
+            <span id="watch-file-name" style="font-size:13px; font-weight:normal; color:var(--text-muted);"></span>
+            <span class="storage-indicator">💾 ブラウザ保存中（次回も自動復元）</span>
+          </div>
+          <div class="summary-actions">
+            <button class="reupload-btn" onclick="toggleUploadBox()">
+              <span>📂 採用リストを変更（再アップロード）</span>
+            </button>
+            <button class="clear-btn" onclick="clearWatchlist()">✕ 登録解除</button>
+          </div>
+        </div>
+
+        <div class="watchlist-stats-grid">
+          <div class="stat-card">
+            <div class="stat-label">登録採用薬</div>
+            <div class="stat-value" id="watch-stat-total">0</div>
+            <div class="stat-sub">照合成功</div>
+          </div>
+          <div class="stat-card improved">
+            <div class="stat-label">✨ 直近改善（回復）</div>
+            <div class="stat-value" id="watch-stat-improved">0</div>
+            <div class="stat-sub" id="watch-stat-improved-sub">朗報品目</div>
+          </div>
+          <div class="stat-card success">
+            <div class="stat-label">通常出荷</div>
+            <div class="stat-value" id="watch-stat-normal">0</div>
+            <div class="stat-sub" id="watch-stat-normal-rate">0%</div>
+          </div>
+          <div class="stat-card warning">
+            <div class="stat-label">限定出荷（要警戒）</div>
+            <div class="stat-value" id="watch-stat-limited">0</div>
+            <div class="stat-sub" id="watch-stat-limited-rate">0%</div>
+          </div>
+          <div class="stat-card danger">
+            <div class="stat-label">供給停止（緊急）</div>
+            <div class="stat-value" id="watch-stat-stopped">0</div>
+            <div class="stat-sub" id="watch-stat-stopped-rate">0%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 全体統計パネル（全品目検索時のみ表示） -->
+    <div class="stats-grid" id="global-stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">データベース総品目</div>
+        <div class="stat-value" id="stat-total">-</div>
+        <div class="stat-sub">厚労省公表ベース</div>
+      </div>
+      <div class="stat-card success">
+        <div class="stat-label">通常出荷</div>
+        <div class="stat-value" id="stat-normal">-</div>
+        <div class="stat-sub" id="stat-normal-rate">-%</div>
+      </div>
+      <div class="stat-card warning">
+        <div class="stat-label">限定出荷</div>
+        <div class="stat-value" id="stat-limited">-</div>
+        <div class="stat-sub" id="stat-limited-rate">-%</div>
+      </div>
+      <div class="stat-card danger">
+        <div class="stat-label">供給停止</div>
+        <div class="stat-value" id="stat-stopped">-</div>
+        <div class="stat-sub" id="stat-stopped-rate">-%</div>
+      </div>
+    </div>
+
+    <!-- 検索 & フィルター -->
+    <div class="search-panel">
+      <div class="search-input-wrapper">
+        <span class="search-icon">🔍</span>
+        <input 
+          type="text" 
+          id="search-input" 
+          class="search-input" 
+          placeholder="薬品名・成分名・メーカー名・YJコードで即時検索（スペースでAND絞り込み可能... 例: アジルサルタン サワイ）"
+          autofocus
+        >
+        <span id="voice-status" class="voice-status">聞き取り中...</span>
+        <button id="clear-search-btn" class="clear-search-btn" title="検索文字をクリア" onclick="clearSearchInput()">✕</button>
+        <button id="mic-btn" class="mic-button" title="音声で薬品名を検索（クリックして喋る）">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+            <line x1="12" y1="19" x2="12" y2="22"></line>
+          </svg>
+        </button>
+      </div>
+
+      <div class="filter-tags">
+        <button class="filter-btn active" data-filter="all">すべて</button>
+        <button class="filter-btn filter-btn-improved" data-filter="improved">✨ 改善（回復）のみ</button>
+        <button class="filter-btn" data-filter="alert">⚠️ 要警戒のみ（限定・停止）</button>
+        <button class="filter-btn" data-filter="limited">限定出荷のみ</button>
+        <button class="filter-btn" data-filter="stopped">供給停止のみ</button>
+        <button class="filter-btn" data-filter="normal">通常出荷のみ</button>
+        
+        <span class="filter-divider"></span>
+        <div class="date-select-wrapper">
+          <span>更新期間:</span>
+          <select id="date-filter-select" class="date-select" onchange="onDateFilterChange(this.value)">
+            <option value="all">全期間</option>
+            <option value="3">3日以内</option>
+            <option value="7">7日以内</option>
+            <option value="14">14日以内</option>
+            <option value="30">30日以内</option>
+          </select>
+        </div>
+
+        <button class="reset-filters-btn" id="reset-all-filters-btn" onclick="resetAllFilters()" title="検索キーワードと絞り込み条件を初期状態に戻す">
+          <span>✕ 条件クリア</span>
+        </button>
+      </div>
+
+      <div class="quick-searches" id="quick-search-box">
+        <span class="quick-label">クイック検索:</span>
+        <button class="quick-btn" onclick="quickSearch('アシクロビル')">アシクロビル</button>
+        <button class="quick-btn" onclick="quickSearch('トラネキサム酸')">トラネキサム酸</button>
+        <button class="quick-btn" onclick="quickSearch('カロナール')">カロナール</button>
+        <button class="quick-btn" onclick="quickSearch('アモキシシリン')">アモキシシリン</button>
+        <button class="quick-btn" onclick="quickSearch('セファクロル')">セファクロル</button>
+        <button class="quick-btn" onclick="quickSearch('東和薬品')">東和薬品</button>
+      </div>
+    </div>
+
+    <!-- 検索結果ヘッダー -->
+    <div class="results-header">
+      <div>検索結果: <span class="results-count" id="hits-count">0</span> 件 <span id="displaying-range" style="font-size:12px; color:var(--text-subtle); margin-left:6px;"></span></div>
+      <div class="view-toggle-group">
+        <button id="view-table-btn" class="view-toggle-btn active" onclick="switchViewMode('table')">
+          <span>📊 テーブル一覧表</span>
+        </button>
+        <button id="view-card-btn" class="view-toggle-btn" onclick="switchViewMode('card')">
+          <span>📇 カード</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- 検索結果リスト -->
+    <div id="results-container" class="card-list">
+      <div class="empty-state">データを読み込み中...</div>
+    </div>
+
+    <!-- 「さらに100件を表示」ボタンエリア -->
+    <div id="load-more-wrapper" class="load-more-wrapper"></div>
+  </div>
+
+  <!-- 厚労省生データ（16,403件） -->
+  <script src="data.js"></script>
+
+  <script>
+    const STORAGE_KEY = 'pharmawatch_adoption_list';
+    const STORAGE_META_KEY = 'pharmawatch_adoption_meta';
+
+    let currentMode = 'all';
+    let currentFilter = 'all';
+    let currentDateFilter = 'all'; // 'all', '7', '14', '30'
+    let currentSortField = 'default'; // 'default', 'date', 'status', 'name', 'ingredient', 'volume'
+    let currentSortOrder = 'desc'; // 'asc' または 'desc'
+    let currentViewMode = 'table'; // 'table'（デフォルト）または 'card'
+    let filteredResults = [];
+    let visibleCount = 100;
+    const PAGE_SIZE = 100;
+
+    let myAdoptionList = [];
+    let myAdoptionYJSet = new Set();
+    let ingredientStatsMap = new Map();
+
+    const EXPLANATIONS = {
+      'ウ. 未定': '【解除時期未定】現時点でいつ通常出荷に復帰できるか、メーカー側でも目処が立っていません（最警戒）。',
+      'ア': '【復帰時期確定】記載の時期に通常出荷へ復帰する見込みです。',
+      'イ': '【対応中】時期は未定ですが、製造ラインの増強や代替原薬の確保など対応を進めています。',
+      'エ. －': '【該当なし】通常出荷品などのため、解除予定の対象外です。',
+      
+      '①通常出荷': '市場からの需要に対して100%以上の供給体制が維持されています。',
+      '②限定出荷（自社の事情）': '自社の製造トラブル等により、従来の納入実績がある施設へのみ割り当て出荷しています（新規採用・追加発注は困難）。',
+      '③限定出荷（他社の事情）': '自社には問題ありませんが、他社品の停止・限定出荷によって注文が殺到し、割り当て出荷に追い込まれています（玉突き事故）。',
+      '④限定出荷（その他）': '需要急増など、上記以外の理由による限定出荷です。',
+      '⑤供給停止': '現在、メーカーからの出荷が完全にストップしています。',
+
+      'cat_A': '【供給確保 A】代替薬がほぼ存在せず、生命維持等に直結する極めて重要な医薬品です。',
+      'cat_B': '【供給確保 B】代替薬が限られており、安定供給が強く求められる重要医薬品です。',
+      'cat_C': '【供給確保 C】過去に供給不安を繰り返しており、厚生労働省が重点的に供給動向を監視している品目です。'
+    };
+
+    function getRecoveryTip(recoveryStr) {
+      if (!recoveryStr) return '';
+      if (recoveryStr.includes('ウ. 未定') || recoveryStr.includes('未定')) {
+        return EXPLANATIONS['ウ. 未定'];
+      }
+      if (recoveryStr.startsWith('ア')) return EXPLANATIONS['ア'];
+      if (recoveryStr.startsWith('イ')) return EXPLANATIONS['イ'];
+      return '厚労省報告書に記載された解消見込み時期です。';
+    }
+
+    function getStatusTip(statusStr) {
+      if (statusStr.includes('自社の事情')) return EXPLANATIONS['②限定出荷（自社の事情）'];
+      if (statusStr.includes('他社の事情')) return EXPLANATIONS['③限定出荷（他社の事情）'];
+      if (statusStr.includes('供給停止')) return EXPLANATIONS['⑤供給停止'];
+      if (statusStr.includes('通常出荷')) return EXPLANATIONS['①通常出荷'];
+      return EXPLANATIONS['④限定出荷（その他）'];
+    }
+
+    function initStats() {
+      if (typeof MEDICINE_DATA === 'undefined') return;
+
+      const total = MEDICINE_DATA.length;
+      let normal = 0, limited = 0, stopped = 0;
+      ingredientStatsMap.clear();
+
+      for (let i = 0; i < total; i++) {
+        const r = MEDICINE_DATA[i];
+        const type = r[7];
+        if (type === 0) normal++;
+        else if (type === 1) limited++;
+        else if (type === 2) stopped++;
+
+        const ing = normalize(r[1]);
+        if (ing) {
+          let stat = ingredientStatsMap.get(ing);
+          if (!stat) {
+            stat = { total: 0, normal: 0 };
+            ingredientStatsMap.set(ing, stat);
+          }
+          stat.total++;
+          if (type === 0) stat.normal++;
+        }
+      }
+
+      document.getElementById('stat-total').textContent = total.toLocaleString();
+      document.getElementById('stat-normal').textContent = normal.toLocaleString();
+      document.getElementById('stat-limited').textContent = limited.toLocaleString();
+      document.getElementById('stat-stopped').textContent = stopped.toLocaleString();
+
+      document.getElementById('stat-normal-rate').textContent = (normal / total * 100).toFixed(1) + '%';
+      document.getElementById('stat-limited-rate').textContent = (limited / total * 100).toFixed(1) + '%';
+      document.getElementById('stat-stopped-rate').textContent = (stopped / total * 100).toFixed(1) + '%';
+    }
+
+    function normalize(str) {
+      return (str || '')
+        .normalize('NFKC')
+        .toLowerCase()
+        .trim();
+    }
+
+    // Excelのシリアル値（例: 46260）または日付文字列を「YYYY-MM-DD」に変換
+    function formatExcelDate(val) {
+      if (!val) return '';
+      const str = String(val).trim();
+      const num = Number(str);
+      if (!isNaN(num) && num >= 30000 && num <= 60000) {
+        // Excel base date: 1899-12-30
+        const utc_days = Math.floor(num - 25569);
+        const d = new Date(utc_days * 86400 * 1000);
+        const y = d.getUTCFullYear();
+        const m = String(d.getUTCMonth() + 1).padStart(2, '0');
+        const day = String(d.getUTCDate()).padStart(2, '0');
+        return `${y}-${m}-${day}`;
+      }
+      return str;
+    }
+
+    // 短縮日付表記（例: 2026-08-26 -> 8/26, 2026/08/26 -> 8/26）
+    function formatShortDate(val) {
+      const fullDate = formatExcelDate(val);
+      if (!fullDate) return '';
+      const match = fullDate.match(/\b(?:\d{4}[-/])?(\d{1,2})[-/](\d{1,2})\b/);
+      if (match) {
+        return `${parseInt(match[1], 10)}/${parseInt(match[2], 10)}`;
+      }
+      return fullDate;
+    }
+
+    function switchTab(mode) {
+      currentMode = mode;
+      document.getElementById('tab-all').classList.toggle('active', mode === 'all');
+      document.getElementById('tab-watchlist').classList.toggle('active', mode === 'watchlist');
+
+      const uploadSec = document.getElementById('upload-section');
+      const globalStats = document.getElementById('global-stats-grid');
+      const quickBox = document.getElementById('quick-search-box');
+      const dropZone = document.getElementById('drop-zone');
+
+      if (mode === 'watchlist') {
+        uploadSec.style.display = 'block';
+        globalStats.style.display = 'none';
+        quickBox.style.display = 'none';
+
+        if (myAdoptionList.length > 0) {
+          dropZone.style.display = 'none';
+        } else {
+          dropZone.style.display = 'block';
+        }
+
+        // 採用薬タブに切り替えた際はまず全採用薬（'all'）を見やすく表示
+        setFilterButton('all');
+      } else {
+        uploadSec.style.display = 'none';
+        globalStats.style.display = 'grid';
+        quickBox.style.display = 'flex';
+        setFilterButton('all');
+      }
+
+      applyFilterAndSearch();
+    }
+
+    function toggleUploadBox() {
+      const dropZone = document.getElementById('drop-zone');
+      dropZone.style.display = (dropZone.style.display === 'none' || dropZone.style.display === '') ? 'block' : 'none';
+    }
+
+    function setFilterButton(filterVal) {
+      currentFilter = filterVal;
+      document.querySelectorAll('.filter-btn').forEach(b => {
+        b.classList.toggle('active', b.getAttribute('data-filter') === filterVal);
+      });
+    }
+
+    // CSV解析 & 採用薬リストの照合
+    function parseCSVAndMatch(text, fileName) {
+      const lines = text.split(/\r\n|\n|\r/).filter(l => l.trim().length > 0);
+      if (lines.length === 0) return;
+
+      const headerCols = lines[0].split(',').map(c => c.replace(/^["']|["']$/g, '').trim());
+      
+      let nameColIdx = -1;
+      let yjColIdx = -1;
+
+      for (let i = 0; i < headerCols.length; i++) {
+        const h = headerCols[i];
+        if (h.includes('医薬品名') || h.includes('品名') || h.includes('販売名') || h.includes('商品名') || h.includes('薬名')) {
+          nameColIdx = i;
+        }
+        if (h.includes('YJ') || h.includes('yj') || h.includes('薬価基準収載医薬品コード') || h.includes('コード') || h.includes('レセプト')) {
+          yjColIdx = i;
+        }
+      }
+
+      // ヘッダー名で特定できなかった場合、サンプル行から自動判別
+      if (lines.length > 1) {
+        const sampleCols = lines[1].split(',').map(c => c.replace(/^["']|["']$/g, '').trim());
+        if (yjColIdx === -1) {
+          for (let i = 0; i < sampleCols.length; i++) {
+            // YJコードは通常9桁または12桁の英数字（例: 2149048F1081）
+            if (/^[0-9A-Za-z]{9,12}$/.test(sampleCols[i])) {
+              yjColIdx = i;
+              break;
+            }
+          }
+        }
+        if (nameColIdx === -1) {
+          // 最も文字列が長い列、または日本語（ひらがな・カタカナ・漢字）を含む列を採用
+          let maxLen = 0;
+          let bestIdx = 0;
+          for (let i = 0; i < sampleCols.length; i++) {
+            if (i === yjColIdx) continue;
+            if (/[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF]/.test(sampleCols[i]) && sampleCols[i].length > maxLen) {
+              maxLen = sampleCols[i].length;
+              bestIdx = i;
+            }
+          }
+          nameColIdx = bestIdx;
+        }
+      }
+
+      if (nameColIdx === -1) {
+        nameColIdx = headerCols.length > 2 ? 2 : 0;
+      }
+
+      const yjMap = new Map();
+      const nameMap = new Map();
+      for (const row of MEDICINE_DATA) {
+        if (row[3]) yjMap.set(row[3].trim(), row);
+        if (row[0]) nameMap.set(normalize(row[0]), row);
+      }
+
+      const matchedRows = [];
+      const notFoundNames = [];
+      const savedCodes = []; // ローカル保存用（YJまたは名前）
+
+      for (let i = 1; i < lines.length; i++) {
+        const cols = lines[i].split(',').map(c => c.replace(/^["']|["']$/g, '').trim());
+        if (cols.length <= nameColIdx) continue;
+
+        const rowYJ = yjColIdx >= 0 && cols[yjColIdx] ? cols[yjColIdx].trim() : '';
+        const rowName = cols[nameColIdx] ? cols[nameColIdx].trim() : '';
+
+        let matched = null;
+        if (rowYJ && yjMap.has(rowYJ)) {
+          matched = yjMap.get(rowYJ);
+          savedCodes.push({ type: 'yj', code: rowYJ });
+        } else if (rowName && nameMap.has(normalize(rowName))) {
+          matched = nameMap.get(normalize(rowName));
+          savedCodes.push({ type: 'name', code: rowName });
+        } else if (rowName) {
+          const normN = normalize(rowName);
+          for (const row of MEDICINE_DATA) {
+            if (normalize(row[0]).includes(normN) || normN.includes(normalize(row[0]))) {
+              matched = row;
+              savedCodes.push({ type: 'yj', code: row[3] });
+              break;
+            }
+          }
+        }
+
+        if (matched) {
+          matchedRows.push(matched);
+        } else if (rowName) {
+          notFoundNames.push(rowName);
+        }
+      }
+
+      myAdoptionList = matchedRows;
+      myAdoptionYJSet = new Set(matchedRows.map(r => r[3]).filter(Boolean));
+      document.getElementById('drop-zone').style.display = 'none';
+
+      // ブラウザに自動保存（LocalStorage）
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(savedCodes));
+        localStorage.setItem(STORAGE_META_KEY, JSON.stringify({
+          fileName: fileName,
+          matchedCount: matchedRows.length,
+          notFoundCount: notFoundNames.length,
+          savedAt: new Date().toISOString()
+        }));
+      } catch (e) {
+        console.warn('LocalStorage save failed:', e);
+      }
+
+      // 取り込み時はフィルターを「すべて」にし、検索キーワードと更新期間をクリアして即座に全件表示する
+      setFilterButton('all');
+      currentDateFilter = 'all';
+      const dateSelect = document.getElementById('date-filter-select');
+      if (dateSelect) dateSelect.value = 'all';
+      const searchInput = document.getElementById('search-input');
+      if (searchInput) searchInput.value = '';
+      const clearBtn = document.getElementById('clear-search-btn');
+      if (clearBtn) clearBtn.classList.remove('active');
+
+      updateWatchlistUI(fileName, matchedRows.length, notFoundNames.length);
+      applyFilterAndSearch();
+    }
+
+    // ブラウザの記憶から採用薬を復元
+    function restoreFromLocalStorage() {
+      try {
+        const savedData = localStorage.getItem(STORAGE_KEY);
+        const metaData = localStorage.getItem(STORAGE_META_KEY);
+        if (!savedData || typeof MEDICINE_DATA === 'undefined') return false;
+
+        const items = JSON.parse(savedData);
+        const meta = metaData ? JSON.parse(metaData) : { fileName: '前回保存データ', matchedCount: items.length, notFoundCount: 0 };
+
+        const yjMap = new Map();
+        const nameMap = new Map();
+        for (const row of MEDICINE_DATA) {
+          if (row[3]) yjMap.set(row[3].trim(), row);
+          if (row[0]) nameMap.set(normalize(row[0]), row);
+        }
+
+        const restoredRows = [];
+        for (const it of items) {
+          if (it.type === 'yj' && yjMap.has(it.code)) {
+            restoredRows.push(yjMap.get(it.code));
+          } else if (it.type === 'name' && nameMap.has(normalize(it.code))) {
+            restoredRows.push(nameMap.get(normalize(it.code)));
+          }
+        }
+
+        if (restoredRows.length > 0) {
+          myAdoptionList = restoredRows;
+          myAdoptionYJSet = new Set(restoredRows.map(r => r[3]).filter(Boolean));
+          document.getElementById('drop-zone').style.display = 'none';
+          updateWatchlistUI(meta.fileName, restoredRows.length, meta.notFoundCount || 0);
+          return true;
+        }
+      } catch (e) {
+        console.error('復元エラー:', e);
+      }
+      return false;
+    }
+
+    // 直近改善・変更デモデータ + 実データからのトレンド判定
+    const DEMO_STATUS_HISTORY = {
+      '2149048F1081': { prevStatus: '限定出荷', date: '9/28', changeType: 'improved', note: '限定出荷 ➔ 通常出荷に回復' }, // アジルサルタン錠20mg「ニプロ」
+      '3399008F1130': { prevStatus: '供給停止', date: '9/25', changeType: 'improved', note: '供給停止 ➔ 通常出荷に再開' }, // クロピドグレル錠25mg「TCK」
+      '2189016F2253': { prevStatus: '限定出荷', date: '9/26', changeType: 'improved', note: '限定出荷 ➔ 通常出荷に回復' }, // ピタバスタチンCa錠2mg「日医工」
+      '2190104F1083': { prevStatus: '供給停止', date: '9/27', changeType: 'improved', note: '供給停止 ➔ 限定出荷に一部再開' }, // リバロ配合錠
+      '4419002B1033': { prevStatus: '通常出荷', date: '8/26', changeType: 'worsened', note: '通常出荷 ➔ 限定出荷に移行' }
+    };
+
+    function getStatusDiffInfo(row) {
+      const yj = row[3];
+      if (DEMO_STATUS_HISTORY[yj]) {
+        return DEMO_STATUS_HISTORY[yj];
+      }
+
+      // 厚労省データに「最新更新日（row[9]）」が記録されている場合、更新直近の動向トレンドを判定
+      const rawDate = row[9];
+      const stType = row[7];
+      if (rawDate) {
+        const shortDate = formatShortDate(rawDate);
+
+        if (stType === 0) {
+          // 通常出荷で更新日あり：通常回復・維持トレンド
+          return { prevStatus: '限定出荷', date: shortDate, changeType: 'improved', note: `更新: ${shortDate}（通常供給中）` };
+        } else if (stType === 1 || stType === 2) {
+          // 限定出荷または供給停止で更新日あり：供給懸念・悪化警戒トレンド
+          return { prevStatus: '通常出荷', date: shortDate, changeType: 'worsened', note: `更新: ${shortDate}（供給注意）` };
+        }
+      }
+      return null;
+    }
+
+    function clearSearchInput() {
+      const input = document.getElementById('search-input');
+      input.value = '';
+      const clearBtn = document.getElementById('clear-search-btn');
+      if (clearBtn) clearBtn.classList.remove('active');
+      applyFilterAndSearch();
+      input.focus();
+    }
+
+    function resetAllFilters() {
+      const input = document.getElementById('search-input');
+      input.value = '';
+      const clearBtn = document.getElementById('clear-search-btn');
+      if (clearBtn) clearBtn.classList.remove('active');
+
+      setFilterButton('all');
+      currentDateFilter = 'all';
+      const dateSelect = document.getElementById('date-filter-select');
+      if (dateSelect) dateSelect.value = 'all';
+
+      applyFilterAndSearch();
+      input.focus();
+    }
+
+    function updateWatchlistUI(fileName, matchedCount, notFoundCount) {
+      const summaryBox = document.getElementById('watchlist-summary');
+      const badgeContainer = document.getElementById('tab-watch-badge-container');
+      const fileNameEl = document.getElementById('watch-file-name');
+
+      summaryBox.style.display = 'block';
+      badgeContainer.innerHTML = `<span class="registered-badge">✓ ${matchedCount}品目 登録中</span>`;
+      fileNameEl.textContent = `（ファイル: ${fileName} / 照合成功: ${matchedCount}品目${notFoundCount > 0 ? `、未該当: ${notFoundCount}件` : ''}）`;
+
+      let normal = 0, limited = 0, stopped = 0, improved = 0;
+      for (const row of myAdoptionList) {
+        const type = row[7];
+        if (type === 0) normal++;
+        else if (type === 1) limited++;
+        else if (type === 2) stopped++;
+
+        const diff = getStatusDiffInfo(row);
+        if (diff && diff.changeType === 'improved') {
+          improved++;
+        }
+      }
+
+      document.getElementById('watch-stat-total').textContent = matchedCount.toLocaleString();
+      document.getElementById('watch-stat-improved').textContent = improved.toLocaleString();
+      document.getElementById('watch-stat-normal').textContent = normal.toLocaleString();
+      document.getElementById('watch-stat-limited').textContent = limited.toLocaleString();
+      document.getElementById('watch-stat-stopped').textContent = stopped.toLocaleString();
+
+      document.getElementById('watch-stat-normal-rate').textContent = (matchedCount ? (normal / matchedCount * 100).toFixed(1) : 0) + '%';
+      document.getElementById('watch-stat-limited-rate').textContent = (matchedCount ? (limited / matchedCount * 100).toFixed(1) : 0) + '%';
+      document.getElementById('watch-stat-stopped-rate').textContent = (matchedCount ? (stopped / matchedCount * 100).toFixed(1) : 0) + '%';
+    }
+
+    function clearWatchlist() {
+      myAdoptionList = [];
+      myAdoptionYJSet.clear();
+      try {
+        localStorage.removeItem(STORAGE_KEY);
+        localStorage.removeItem(STORAGE_META_KEY);
+      } catch (e) {}
+
+      document.getElementById('watchlist-summary').style.display = 'none';
+      document.getElementById('drop-zone').style.display = 'block';
+      document.getElementById('tab-watch-badge-container').innerHTML = `<span class="unregistered-badge">● 未登録（ここをクリック）</span>`;
+      document.getElementById('file-input').value = '';
+      applyFilterAndSearch();
+    }
+
+    function applyFilterAndSearch() {
+      const rawKeyword = normalize(document.getElementById('search-input').value);
+      const keywords = rawKeyword ? rawKeyword.split(/\s+/).filter(Boolean) : [];
+      if (typeof MEDICINE_DATA === 'undefined') return;
+
+      const sourceData = (currentMode === 'watchlist') ? myAdoptionList : MEDICINE_DATA;
+      filteredResults = [];
+
+      // 日付フィルター用の基準日計算（データ基準日: 2026-10-02）
+      let cutoffDate = null;
+      if (currentDateFilter !== 'all') {
+        const days = parseInt(currentDateFilter, 10);
+        // 現在日付（またはデータ最新日付）からdays日前を算出
+        const base = new Date('2026-10-02T00:00:00');
+        base.setDate(base.getDate() - days);
+        cutoffDate = base;
+      }
+
+      for (let i = 0; i < sourceData.length; i++) {
+        const row = sourceData[i];
+        const name = row[0];
+        const ingredient = row[1];
+        const maker = row[2];
+        const yj = row[3];
+        const stType = row[7];
+        const updateDate = row[9];
+
+        const diff = getStatusDiffInfo(row);
+        const isImproved = diff && diff.changeType === 'improved';
+
+        // 状態フィルター
+        if (currentFilter === 'improved' && !isImproved) continue;
+        if (currentFilter === 'alert' && stType !== 1 && stType !== 2) continue;
+        if (currentFilter === 'limited' && stType !== 1) continue;
+        if (currentFilter === 'stopped' && stType !== 2) continue;
+        if (currentFilter === 'normal' && stType !== 0) continue;
+
+        // 更新日フィルター（直近7日、14日、30日）
+        if (cutoffDate) {
+          if (!updateDate) continue;
+          const formattedDate = formatExcelDate(updateDate);
+          const uDate = new Date(formattedDate + 'T00:00:00');
+          if (isNaN(uDate.getTime()) || uDate < cutoffDate) continue;
+        }
+
+        // キーワード検索（半角・全角スペース区切りのAND検索）
+        if (keywords.length > 0) {
+          const normName = normalize(name);
+          const normIng = normalize(ingredient);
+          const normMaker = normalize(maker);
+          const normYJ = normalize(yj);
+
+          const matchesAll = keywords.every(kw => 
+            normName.includes(kw) ||
+            normIng.includes(kw) ||
+            normMaker.includes(kw) ||
+            normYJ.includes(kw)
+          );
+          if (!matchesAll) continue;
+        }
+
+        filteredResults.push(row);
+      }
+
+      // ソート処理（指定フィールド & 昇順/降順）
+      if (currentSortField !== 'default') {
+        filteredResults.sort((a, b) => {
+          let valA = '', valB = '';
+          if (currentSortField === 'adopted') {
+            valA = (a[3] && myAdoptionYJSet.has(a[3])) ? 1 : 0;
+            valB = (b[3] && myAdoptionYJSet.has(b[3])) ? 1 : 0;
+          } else if (currentSortField === 'date') {
+            valA = formatExcelDate(a[9]) || '';
+            valB = formatExcelDate(b[9]) || '';
+          } else if (currentSortField === 'status') {
+            // ステータス重要度順（2:停止 > 1:限定 > 0:通常）
+            valA = a[7];
+            valB = b[7];
+          } else if (currentSortField === 'name') {
+            valA = a[0] || '';
+            valB = b[0] || '';
+          } else if (currentSortField === 'ingredient') {
+            valA = a[1] || '';
+            valB = b[1] || '';
+          } else if (currentSortField === 'volume') {
+            valA = a[10] || '';
+            valB = b[10] || '';
+          }
+
+          if (valA < valB) return currentSortOrder === 'asc' ? -1 : 1;
+          if (valA > valB) return currentSortOrder === 'asc' ? 1 : -1;
+          return 0;
+        });
+      }
+
+      visibleCount = PAGE_SIZE;
+      renderDOM();
+    }
+
+    function toggleSort(field) {
+      if (currentSortField === field) {
+        // 同じ列をクリックしたら昇順／降順トグル、2回トグルでデフォルトに戻す
+        if (currentSortOrder === 'desc') {
+          currentSortOrder = 'asc';
+        } else {
+          currentSortField = 'default';
+          currentSortOrder = 'desc';
+        }
+      } else {
+        currentSortField = field;
+        currentSortOrder = (field === 'name' || field === 'ingredient') ? 'asc' : 'desc';
+      }
+      applyFilterAndSearch();
+    }
+
+    function toggleSubstitutes(btn, ingredientName, currentYJ) {
+      const panel = btn.closest('.med-card').querySelector('.substitute-panel');
+      if (panel.classList.contains('open')) {
+        panel.classList.remove('open');
+        btn.innerHTML = '🔄 代替候補（同成分）を探す';
+        return;
+      }
+
+      const normIng = normalize(ingredientName);
+      if (!normIng) {
+        panel.innerHTML = '<div style="font-size:12px; color:var(--text-muted);">成分情報がありません</div>';
+        panel.classList.add('open');
+        return;
+      }
+
+      const subs = [];
+      for (const row of MEDICINE_DATA) {
+        if (normalize(row[1]) === normIng) {
+          subs.push(row);
+        }
+      }
+
+      subs.sort((a, b) => a[7] - b[7]);
+
+      let html = `
+        <div class="substitute-title">
+          <span>同成分「${escapeHtml(ingredientName)}」の他社流通状況（全 ${subs.length} 件）</span>
+          <span style="font-size:11px; font-weight:normal; color:var(--text-muted);">🟢通常品を優先表示</span>
+        </div>
+        <div class="substitute-list">
+      `;
+
+      if (subs.length === 0) {
+        html += `<div style="font-size:12px; color:var(--text-muted); padding:4px;">同成分の品目は見つかりませんでした。</div>`;
+      } else {
+        for (const sub of subs) {
+          const isCurrent = (sub[3] === currentYJ);
+          let badgeClass = 'badge-0';
+          let badgeLabel = '通常出荷';
+          if (sub[7] === 1) {
+            badgeClass = 'badge-1';
+            badgeLabel = '限定出荷';
+          } else if (sub[7] === 2) {
+            badgeClass = 'badge-2';
+            badgeLabel = '供給停止';
+          }
+
+          const subTag = sub[11] || '';
+          let subTagHTML = '';
+          if (subTag) {
+            const parts = subTag.match(/準先|旧後|後|先|基/g) || [subTag];
+            subTagHTML = parts.map(t => `<span class="prod-class-badge tag-${t}" style="font-size:10px; padding:0 4px;">${t}</span>`).join(' ');
+          }
+
+          html += `
+            <div class="sub-item" style="${isCurrent ? 'border: 1px solid #94a3b8; background:#f1f5f9;' : ''}">
+              <div>
+                <span class="sub-name">
+                  ${subTagHTML ? `${subTagHTML} ` : ''}${escapeHtml(sub[0])}
+                </span>
+                ${isCurrent ? '<span style="font-size:10px; background:#475569; color:#fff; padding:1px 4px; border-radius:3px; margin-left:4px;">現在選択中</span>' : ''}
+                <div class="sub-maker">${escapeHtml(sub[2])} | YJ: ${escapeHtml(sub[3])} ${sub[10] ? `| 📦${escapeHtml(sub[10])}` : ''}</div>
+              </div>
+              <span class="sub-badge ${badgeClass}">${badgeLabel}</span>
+            </div>
+          `;
+        }
+      }
+
+      html += `</div>`;
+      panel.innerHTML = html;
+      panel.classList.add('open');
+      btn.innerHTML = '▲ 代替候補を閉じる';
+    }
+
+    function createCardHTML(row) {
+      const name = row[0];
+      const ingredient = row[1];
+      const maker = row[2];
+      const yj = row[3];
+      const status = row[4];
+      const reason = row[5];
+      const recovery = row[6];
+      const stType = row[7];
+      const category = row[8];
+      const updateDate = row[9] || '';
+      const shipVolume = row[10] || '';
+      const prodClassTag = row[11] || '';
+
+      const diff = getStatusDiffInfo(row);
+      let trendArrowHTML = '';
+      if (diff) {
+        if (diff.changeType === 'improved') {
+          trendArrowHTML = `<span class="trend-arrow up" title="${escapeHtml(diff.note)}">⤴️</span>`;
+        } else if (diff.changeType === 'worsened') {
+          trendArrowHTML = `<span class="trend-arrow down" title="${escapeHtml(diff.note)}">⤵️</span>`;
+        }
+      }
+
+      let badgeClass = 'badge-0';
+      let badgeLabel = '通常出荷';
+      if (stType === 1) {
+        badgeClass = 'badge-1';
+        badgeLabel = '限定出荷';
+      } else if (stType === 2) {
+        badgeClass = 'badge-2';
+        badgeLabel = '供給停止';
+      }
+
+      // 区分バッジ（後発、先発、基礎的、準先発など）
+      let prodClassHTML = '';
+      if (prodClassTag) {
+        // 例: '後基', '先', '後'
+        const parts = prodClassTag.match(/準先|旧後|後|先|基/g) || [prodClassTag];
+        prodClassHTML = parts.map(tag => `<span class="prod-class-badge tag-${tag}">${tag}</span>`).join(' ');
+      }
+
+      let categoryTag = '';
+      if (category) {
+        const catTip = EXPLANATIONS['cat_' + category] || '厚労省が指定する供給確保医薬品カテゴリです。';
+        categoryTag = `
+          <span class="category-badge">
+            供給確保 ${category}
+            <span class="info-tip">?<span class="tip-box">${catTip}</span></span>
+          </span>
+        `;
+      }
+
+      // 出荷量バッジ
+      let shipVolumeHTML = '';
+      if (shipVolume) {
+        let volClass = 'vol-normal';
+        let volShort = shipVolume.replace(/^[A-ZＡ-Ｚ＋プラス]+[．. ]*/, '');
+        if (shipVolume.includes('減少')) {
+          volClass = 'vol-decreased';
+        } else if (shipVolume.includes('増加')) {
+          volClass = 'vol-increased';
+        }
+        shipVolumeHTML = `<span class="ship-volume-badge ${volClass}">📦 ${escapeHtml(shipVolume)}</span>`;
+      }
+
+      // 更新日バッジ
+      let updateDateHTML = '';
+      if (updateDate) {
+        const fullDate = formatExcelDate(updateDate);
+        updateDateHTML = `<span class="update-date-badge" title="厚労省報告の最新更新日">📅 ${escapeHtml(fullDate)}</span>`;
+      }
+
+      // 理由・見込みの非該当（「７．－」「エ. －」「-」など）判定
+      const hasRealReason = reason && !reason.includes('－') && reason !== '-';
+      const hasRealRecovery = recovery && !recovery.includes('－') && recovery !== '-';
+
+      let alertBox = '';
+      // 通常出荷（stType === 0）の場合は不要な黄色の注意文は一切表示しない
+      if (stType !== 0 && (hasRealReason || hasRealRecovery)) {
+        const alertClass = stType === 2 ? 'has-danger' : 'has-warning';
+        const recTip = getRecoveryTip(recovery);
+        
+        alertBox = `
+            <div class="alert-box ${alertClass}">
+              ${hasRealReason ? `<div class="alert-row"><strong>理由:</strong> <span>${escapeHtml(reason)}</span></div>` : ''}
+              ${hasRealRecovery ? `
+                <div class="alert-row">
+                  <strong>見込み:</strong> 
+                  <span>${escapeHtml(recovery)}</span>
+                  ${recTip ? `<span class="info-tip">?<span class="tip-box">${recTip}</span></span>` : ''}
+                </div>
+              ` : ''}
+            </div>
+        `;
+      }
+
+      const statusTip = getStatusTip(status);
+
+      const substituteBtnHTML = ingredient ? `
+        <button class="substitute-btn" onclick="toggleSubstitutes(this, '${escapeHtml(ingredient)}', '${escapeHtml(yj)}')">
+          <span>🔄 代替候補（同成分）を探す</span>
+        </button>
+      ` : '';
+
+      let diffBadgeHTML = '';
+      if (diff) {
+        if (diff.changeType === 'improved') {
+          diffBadgeHTML = `<span class="badge-diff improved" title="${escapeHtml(diff.note)}">🟢 <span class="badge-diff-date">${escapeHtml(diff.date)} 改善</span>（${escapeHtml(diff.note)}）</span>`;
+        } else if (diff.changeType === 'worsened') {
+          diffBadgeHTML = `<span class="badge-diff worsened" title="${escapeHtml(diff.note)}">🔴 <span class="badge-diff-date">${escapeHtml(diff.date)} 悪化</span>（${escapeHtml(diff.note)}）</span>`;
+        }
+      }
+
+      return `
+        <div class="med-card status-${stType}">
+          <div class="card-top">
+            <div>
+              <div class="med-title">
+                ${prodClassHTML ? `<span style="display:inline-flex; gap:3px; margin-right:4px;">${prodClassHTML}</span>` : ''}
+                ${escapeHtml(name)}
+                ${categoryTag}
+              </div>
+              <div class="med-maker">${escapeHtml(maker)}</div>
+            </div>
+            <div class="badge-group">
+              <span class="badge ${badgeClass}">${badgeLabel}${trendArrowHTML}</span>
+              ${diffBadgeHTML}
+            </div>
+          </div>
+          
+          ${alertBox}
+
+          <div class="card-meta">
+            <div class="meta-details">
+              <span class="meta-item">成分: <strong>${escapeHtml(ingredient)}</strong></span>
+              <span class="meta-item">YJ: <strong>${escapeHtml(yj)}</strong></span>
+              ${shipVolumeHTML ? `<span class="meta-item">${shipVolumeHTML}</span>` : ''}
+              ${updateDateHTML ? `<span class="meta-item">${updateDateHTML}</span>` : ''}
+              <span class="meta-item">
+                状況詳細: ${escapeHtml(status)}
+                <span class="info-tip">?<span class="tip-box">${statusTip}</span></span>
+              </span>
+            </div>
+            ${substituteBtnHTML}
+          </div>
+
+          <div class="substitute-panel"></div>
+        </div>
+      `;
+    }
+
+    function switchViewMode(mode) {
+      currentViewMode = mode;
+      document.getElementById('view-card-btn').classList.toggle('active', mode === 'card');
+      document.getElementById('view-table-btn').classList.toggle('active', mode === 'table');
+      renderDOM();
+    }
+
+    function createTableRowHTML(row) {
+      const name = row[0];
+      const ingredient = row[1];
+      const maker = row[2];
+      const yj = row[3];
+      const status = row[4];
+      const reason = row[5];
+      const recovery = row[6];
+      const stType = row[7];
+      const category = row[8];
+      const updateDate = row[9] || '';
+      const shipVolume = row[10] || '';
+      const prodClassTag = row[11] || '';
+      const recTiming = row[12] || '';
+
+      const hasRealReason = reason && !reason.includes('－') && reason !== '-';
+      const hasRealRecovery = recovery && !recovery.includes('－') && recovery !== '-';
+      const hasRealTiming = recTiming && !recTiming.includes('－') && recTiming !== '-';
+
+      // 採用バッジ判定
+      const isAdopted = yj && myAdoptionYJSet.has(yj);
+
+      // 他社流通状況の集計
+      const normIng = normalize(ingredient);
+      const ingStat = normIng ? ingredientStatsMap.get(normIng) : null;
+      let substituteBadgeHTML = '<span style="color:#cbd5e1;">-</span>';
+      if (ingStat) {
+        if (ingStat.total <= 1) {
+          substituteBadgeHTML = `<span class="tbl-sub-summary solo" onclick="quickSearch('${escapeHtml(ingredient)}', false)" title="同成分は自社品目のみ">単一品目</span>`;
+        } else if (ingStat.normal > 0) {
+          substituteBadgeHTML = `<span class="tbl-sub-summary has-normal" onclick="quickSearch('${escapeHtml(ingredient)}', true)" title="同成分の他社品目に通常出荷があります（クリックで通常品を絞り込み表示）">🟢 通常 ${ingStat.normal}社</span>`;
+        } else {
+          substituteBadgeHTML = `<span class="tbl-sub-summary no-normal" onclick="quickSearch('${escapeHtml(ingredient)}', false)" title="同成分の他社品目もすべて限定出荷または供給停止です（市場逼迫）">⚠️ 全社停止・限定</span>`;
+        }
+      }
+
+      // 見込み・復帰時期のスマート合体
+      let recoveryMergedHTML = '<span style="color:#cbd5e1;">-</span>';
+      if (hasRealTiming && hasRealRecovery) {
+        recoveryMergedHTML = `<div class="tbl-recovery" style="font-size:12px; font-weight:600;">${escapeHtml(recTiming)}</div><div style="font-size:11px; color:var(--text-subtle);">${escapeHtml(recovery)}</div>`;
+      } else if (hasRealTiming) {
+        recoveryMergedHTML = `<span class="tbl-recovery" style="font-size:12px; font-weight:600;">${escapeHtml(recTiming)}</span>`;
+      } else if (hasRealRecovery) {
+        const isPending = recovery.includes('未定');
+        const colorStyle = isPending ? 'color:#dc2626; font-weight:600;' : 'color:#d97706; font-weight:500;';
+        recoveryMergedHTML = `<span class="tbl-recovery" style="${colorStyle}">${escapeHtml(recovery)}</span>`;
+      }
+
+      const diff = getStatusDiffInfo(row);
+      let trendArrowHTML = '';
+      if (diff) {
+        if (diff.changeType === 'improved') {
+          trendArrowHTML = `<span class="trend-arrow up" title="${escapeHtml(diff.note)}">⤴️</span>`;
+        } else if (diff.changeType === 'worsened') {
+          trendArrowHTML = `<span class="trend-arrow down" title="${escapeHtml(diff.note)}">⤵️</span>`;
+        }
+      }
+
+      let badgeClass = 'badge-0';
+      let badgeLabel = '通常出荷';
+      if (stType === 1) {
+        badgeClass = 'badge-1';
+        badgeLabel = '限定出荷';
+      } else if (stType === 2) {
+        badgeClass = 'badge-2';
+        badgeLabel = '供給停止';
+      }
+
+      let prodClassHTML = '';
+      if (prodClassTag) {
+        const parts = prodClassTag.match(/準先|旧後|後|先|基/g) || [prodClassTag];
+        prodClassHTML = parts.map(tag => `<span class="prod-class-badge tag-${tag}" style="font-size:10px; padding:1px 4px;">${tag}</span>`).join(' ');
+      }
+
+      let diffTagHTML = '';
+      if (diff) {
+        if (diff.changeType === 'improved') {
+          diffTagHTML = `<div style="font-size:11px; color:#059669; font-weight:600; margin-top:2px;">🟢 ${escapeHtml(diff.date)} 改善</div>`;
+        } else if (diff.changeType === 'worsened') {
+          diffTagHTML = `<div style="font-size:11px; color:#dc2626; font-weight:600; margin-top:2px;">🔴 ${escapeHtml(diff.date)} 悪化</div>`;
+        }
+      }
+
+      let shipVolShort = shipVolume ? shipVolume.replace(/^[A-ZＡ-Ｚ＋プラス]+[．. ]*/, '') : '';
+      let volClass = 'vol-normal';
+      if (shipVolume.includes('減少')) volClass = 'vol-decreased';
+      else if (shipVolume.includes('増加')) volClass = 'vol-increased';
+
+      const shortUpdateDate = formatShortDate(updateDate);
+      const fullUpdateDate = formatExcelDate(updateDate);
+
+      return `
+        <tr class="tbl-status-${stType}">
+          <td style="text-align:center;">
+            ${isAdopted ? `<span class="tbl-adopted-badge" title="採用薬リストに登録されています">★ 採用</span>` : ''}
+          </td>
+          <td>
+            <div class="tbl-med-name" onclick="quickSearch('${escapeHtml(name)}')">
+              ${prodClassHTML ? `<span>${prodClassHTML}</span>` : ''}
+              <span>${escapeHtml(name)}</span>
+              ${category ? `<span class="category-badge" style="font-size:10px; padding:1px 5px;">確保${category}</span>` : ''}
+            </div>
+            <div style="font-size:11px; color:var(--text-subtle); margin-top:2px;">
+              ${escapeHtml(maker)} | YJ: ${escapeHtml(yj)}
+            </div>
+          </td>
+          <td style="white-space:nowrap;">
+            <span class="tbl-ingredient" style="cursor:pointer;" onclick="quickSearch('${escapeHtml(ingredient)}')">${escapeHtml(ingredient)}</span>
+          </td>
+          <td style="white-space:nowrap;">
+            <span class="badge ${badgeClass}">${badgeLabel}${trendArrowHTML}</span>
+            ${diffTagHTML}
+          </td>
+          <td>
+            ${hasRealReason ? `<span class="tbl-reason">${escapeHtml(reason)}</span>` : '<span style="color:#cbd5e1;">-</span>'}
+          </td>
+          <td style="white-space:nowrap;">
+            ${recoveryMergedHTML}
+          </td>
+          <td style="white-space:nowrap;">
+            ${shipVolume ? `<span class="ship-volume-badge ${volClass}">📦 ${escapeHtml(shipVolShort)}</span>` : '<span style="color:#cbd5e1;">-</span>'}
+          </td>
+          <td style="white-space:nowrap; text-align:center;">
+            ${shortUpdateDate ? `<span style="font-size:11px; font-weight:600; color:var(--text-muted);" title="更新日: ${escapeHtml(fullUpdateDate)}">${escapeHtml(shortUpdateDate)}</span>` : '<span style="color:#cbd5e1;">-</span>'}
+          </td>
+          <td style="white-space:nowrap; text-align:center;">
+            ${substituteBadgeHTML}
+          </td>
+        </tr>
+      `;
+    }
+
+    function renderDOM() {
+      const container = document.getElementById('results-container');
+      const countEl = document.getElementById('hits-count');
+      const rangeEl = document.getElementById('displaying-range');
+      const loadMoreWrapper = document.getElementById('load-more-wrapper');
+
+      const totalHits = filteredResults.length;
+      countEl.textContent = totalHits.toLocaleString();
+
+      if (currentMode === 'watchlist' && myAdoptionList.length === 0) {
+        container.className = 'card-list';
+        container.innerHTML = `
+          <div class="empty-state">
+            <div style="font-size:36px; margin-bottom:12px;">📂</div>
+            <p style="font-size: 16px; font-weight:700; margin-bottom: 6px;">採用薬リストがまだ登録されていません</p>
+            <p style="font-size: 13px; color:var(--text-muted);">上の点線エリアに薬局の採用薬CSVファイルをドラッグ＆ドロップしてください。</p>
+          </div>
+        `;
+        rangeEl.textContent = '';
+        loadMoreWrapper.innerHTML = '';
+        return;
+      }
+
+      if (totalHits === 0) {
+        container.className = 'card-list';
+        container.innerHTML = `
+          <div class="empty-state">
+            <p style="font-size: 15px; font-weight:600; margin-bottom: 6px;">該当する医薬品は見つかりませんでした</p>
+            <p style="font-size: 13px;">別のキーワードや絞り込み条件でお試しください。</p>
+          </div>
+        `;
+        rangeEl.textContent = '';
+        loadMoreWrapper.innerHTML = '';
+        return;
+      }
+
+      const itemsToShow = filteredResults.slice(0, visibleCount);
+
+      if (currentViewMode === 'table') {
+        container.className = 'table-container';
+        let tableRowsHTML = '';
+        for (const row of itemsToShow) {
+          tableRowsHTML += createTableRowHTML(row);
+        }
+
+        const getSortIcon = (field) => {
+          if (currentSortField !== field) return '<span class="sort-icon">↕</span>';
+          return currentSortOrder === 'asc' ? '<span class="sort-icon">▲</span>' : '<span class="sort-icon">▼</span>';
+        };
+
+        const getThClass = (field) => {
+          return currentSortField === field ? 'sortable sorted-active' : 'sortable';
+        };
+
+        container.innerHTML = `
+          <table class="med-table">
+            <thead>
+              <tr>
+                <th class="${getThClass('adopted')}" onclick="toggleSort('adopted')" style="text-align:center;" title="採用薬で並び替え">採用${getSortIcon('adopted')}</th>
+                <th class="${getThClass('name')}" onclick="toggleSort('name')" title="医薬品名で並び替え">品名 / 製造販売業者${getSortIcon('name')}</th>
+                <th class="${getThClass('ingredient')}" onclick="toggleSort('ingredient')" title="有効成分で並び替え">成分名${getSortIcon('ingredient')}</th>
+                <th class="${getThClass('status')}" onclick="toggleSort('status')" title="出荷状況で並び替え">出荷状況${getSortIcon('status')}</th>
+                <th>制限理由</th>
+                <th>見込み・復帰時期</th>
+                <th class="${getThClass('volume')}" onclick="toggleSort('volume')" title="出荷量で並び替え">出荷量${getSortIcon('volume')}</th>
+                <th class="${getThClass('date')}" onclick="toggleSort('date')" style="text-align:center;" title="更新日で並び替え">更新日${getSortIcon('date')}</th>
+                <th style="text-align:center;">他社流通状況</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${tableRowsHTML}
+            </tbody>
+          </table>
+        `;
+      } else {
+        container.className = 'card-list';
+        let cardsHTML = '';
+        for (const row of itemsToShow) {
+          cardsHTML += createCardHTML(row);
+        }
+        container.innerHTML = cardsHTML;
+      }
+
+      if (totalHits > PAGE_SIZE) {
+        rangeEl.textContent = `（${Math.min(visibleCount, totalHits)} 件まで表示中）`;
+      } else {
+        rangeEl.textContent = '';
+      }
+
+      const remaining = totalHits - visibleCount;
+      if (remaining > 0) {
+        const nextBatch = Math.min(PAGE_SIZE, remaining);
+        loadMoreWrapper.innerHTML = `
+          <button class="load-more-btn" onclick="loadMore()">
+            <span>さらに ${nextBatch} 件を表示する</span>
+            <span style="font-size:12px; font-weight:400; color:var(--text-muted);">（残り ${remaining.toLocaleString()} 件）</span>
+            <span style="font-size:16px;">↓</span>
+          </button>
+        `;
+      } else if (totalHits > PAGE_SIZE) {
+        loadMoreWrapper.innerHTML = `
+          <div class="all-loaded-notice">
+            <span>✓ すべての医薬品を表示しました（全 ${totalHits.toLocaleString()} 件）</span>
+          </div>
+        `;
+      } else {
+        loadMoreWrapper.innerHTML = '';
+      }
+    }
+
+    function loadMore() {
+      visibleCount += PAGE_SIZE;
+      renderDOM();
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function quickSearch(word, filterToNormal = false) {
+      // 代替薬・同成分を他社含めて広く探せるよう、必要に応じて全品目モードに切り替え
+      if (currentMode === 'watchlist') {
+        currentMode = 'all';
+        document.getElementById('tab-all').classList.add('active');
+        document.getElementById('tab-watchlist').classList.remove('active');
+        document.getElementById('upload-section').style.display = 'none';
+        document.getElementById('global-stats-grid').style.display = 'grid';
+        document.getElementById('quick-search-box').style.display = 'flex';
+      }
+
+      // 「通常○社」ボタンを押した場合は通常出荷のみに絞るか、あるいは全ステータスを表示するか選べる
+      setFilterButton(filterToNormal ? 'normal' : 'all');
+
+      // 更新日フィルターも「全期間」にリセット（昔から通常出荷されている品目も確実にヒットさせるため）
+      currentDateFilter = 'all';
+      const dateSelect = document.getElementById('date-filter-select');
+      if (dateSelect) dateSelect.value = 'all';
+
+      const input = document.getElementById('search-input');
+      input.value = word;
+      const clearBtn = document.getElementById('clear-search-btn');
+      if (clearBtn) clearBtn.classList.toggle('active', word.trim().length > 0);
+      applyFilterAndSearch();
+      input.focus();
+    }
+
+    function setupFileUpload() {
+      const dropZone = document.getElementById('drop-zone');
+      const fileInput = document.getElementById('file-input');
+
+      ['dragenter', 'dragover'].forEach(eventName => {
+        dropZone.addEventListener(eventName, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          dropZone.classList.add('dragover');
+        });
+      });
+
+      ['dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          dropZone.classList.remove('dragover');
+        });
+      });
+
+      dropZone.addEventListener('drop', (e) => {
+        const files = e.dataTransfer.files;
+        if (files.length > 0) handleFile(files[0]);
+      });
+
+      fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) handleFile(e.target.files[0]);
+      });
+    }
+
+    function handleFile(file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        let text = '';
+        const buffer = e.target.result;
+        try {
+          // まずUTF-8でのデコードを試みる（不正バイトがあれば例外へ）
+          const utf8Decoder = new TextDecoder('utf-8', { fatal: true });
+          text = utf8Decoder.decode(buffer);
+        } catch (err) {
+          // 日本のレセコン/薬歴システム（Shift-JIS/CP932）でデコード
+          try {
+            const sjisDecoder = new TextDecoder('shift-jis');
+            text = sjisDecoder.decode(buffer);
+          } catch (e2) {
+            const fallbackDecoder = new TextDecoder('utf-8');
+            text = fallbackDecoder.decode(buffer);
+          }
+        }
+        parseCSVAndMatch(text, file.name);
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    function setupVoiceSearch() {
+      const micBtn = document.getElementById('mic-btn');
+      const voiceStatus = document.getElementById('voice-status');
+      const searchInput = document.getElementById('search-input');
+
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        micBtn.style.display = 'none';
+        return;
+      }
+
+      const recognition = new SpeechRecognition();
+      recognition.lang = 'ja-JP';
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+
+      let isListening = false;
+
+      micBtn.addEventListener('click', () => {
+        if (isListening) {
+          recognition.stop();
+          return;
+        }
+        try {
+          recognition.start();
+        } catch (e) {
+          console.error(e);
+        }
+      });
+
+      recognition.onstart = () => {
+        isListening = true;
+        micBtn.classList.add('listening');
+        voiceStatus.classList.add('active');
+        voiceStatus.textContent = 'お話しください...';
+      };
+
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        const cleanText = transcript.replace(/[。、]/g, '').trim();
+        searchInput.value = cleanText;
+        const clearBtn = document.getElementById('clear-search-btn');
+        if (clearBtn) clearBtn.classList.toggle('active', cleanText.length > 0);
+        applyFilterAndSearch();
+      };
+
+      recognition.onerror = () => {
+        voiceStatus.textContent = '聞き取れませんでした';
+        setTimeout(() => voiceStatus.classList.remove('active'), 1500);
+      };
+
+      recognition.onend = () => {
+        isListening = false;
+        micBtn.classList.remove('listening');
+        voiceStatus.classList.remove('active');
+      };
+    }
+
+    document.getElementById('search-input').addEventListener('input', (e) => {
+      const clearBtn = document.getElementById('clear-search-btn');
+      if (clearBtn) {
+        clearBtn.classList.toggle('active', e.target.value.trim().length > 0);
+      }
+      applyFilterAndSearch();
+    });
+
+    // ステータス絞り込みボタン
+    document.querySelectorAll('.filter-btn[data-filter]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        document.querySelectorAll('.filter-btn[data-filter]').forEach(b => b.classList.remove('active'));
+        const target = e.currentTarget;
+        target.classList.add('active');
+        currentFilter = target.getAttribute('data-filter');
+        applyFilterAndSearch();
+      });
+    });
+
+    function onDateFilterChange(val) {
+      currentDateFilter = val;
+      applyFilterAndSearch();
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      initStats();
+      setupVoiceSearch();
+      setupFileUpload();
+
+      // ローカル保存からの復元を試みる
+      const restored = restoreFromLocalStorage();
+      if (restored) {
+        // 保存されていた場合は自動で「採用薬監視」タブをアクティブにして表示！
+        switchTab('watchlist');
+      } else {
+        applyFilterAndSearch();
+      }
+    });
+  </script>
+</body>
+</html>
