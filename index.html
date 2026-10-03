@@ -1359,6 +1359,47 @@
       padding: 16px;
       text-align: center;
     }
+
+    /* スマートフォン向けレスポンシブ最適化 (768px以下) */
+    @media (max-width: 768px) {
+      body {
+        padding: 16px 8px;
+      }
+      .container {
+        padding: 0 4px;
+      }
+      .card-top {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+      }
+      .card-main-info {
+        width: 100%;
+      }
+      .med-title {
+        font-size: 15px;
+        line-height: 1.45;
+        word-break: break-all;
+      }
+      .badge-group {
+        width: 100%;
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 6px;
+        margin-top: 4px;
+      }
+      .badge-diff {
+        font-size: 10px;
+        padding: 3px 8px;
+        white-space: normal;
+      }
+      .search-input {
+        font-size: 14px;
+        padding: 12px 75px 12px 38px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -2301,10 +2342,10 @@
       return `
         <div class="med-card status-${stType}">
           <div class="card-top">
-            <div>
+            <div class="card-main-info">
               <div class="med-title">
                 ${prodClassHTML ? `<span style="display:inline-flex; gap:3px; margin-right:4px;">${prodClassHTML}</span>` : ''}
-                ${escapeHtml(name)}
+                <span>${escapeHtml(name)}</span>
                 ${categoryTag}
               </div>
               <div class="med-maker">${escapeHtml(maker)}</div>
@@ -2688,55 +2729,75 @@
 
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       if (!SpeechRecognition) {
-        micBtn.style.display = 'none';
+        micBtn.title = 'お使いのブラウザは音声入力に対応していません';
+        micBtn.style.opacity = '0.4';
+        micBtn.addEventListener('click', () => {
+          alert('お使いのブラウザは音声入力APIに対応していません。SafariまたはChromeをご利用ください。');
+        });
         return;
       }
 
-      const recognition = new SpeechRecognition();
-      recognition.lang = 'ja-JP';
-      recognition.interimResults = false;
-      recognition.maxAlternatives = 1;
-
+      let recognition = null;
       let isListening = false;
 
+      function createRecognition() {
+        const r = new SpeechRecognition();
+        r.lang = 'ja-JP';
+        r.continuous = false;
+        r.interimResults = false;
+        r.maxAlternatives = 1;
+
+        r.onstart = () => {
+          isListening = true;
+          micBtn.classList.add('listening');
+          voiceStatus.classList.add('active');
+          voiceStatus.textContent = 'お話しください...';
+        };
+
+        r.onresult = (event) => {
+          const transcript = event.results[0][0].transcript;
+          const cleanText = transcript.replace(/[。、]/g, '').trim();
+          searchInput.value = cleanText;
+          const clearBtn = document.getElementById('clear-search-btn');
+          if (clearBtn) clearBtn.classList.toggle('active', cleanText.length > 0);
+          applyFilterAndSearch();
+        };
+
+        r.onerror = (e) => {
+          isListening = false;
+          micBtn.classList.remove('listening');
+          if (e.error === 'not-allowed') {
+            voiceStatus.textContent = 'マイク許可が必要です';
+            alert('マイクへのアクセスが許可されていません。ブラウザ設定でマイクを許可してください。');
+          } else {
+            voiceStatus.textContent = '聞き取れませんでした';
+          }
+          setTimeout(() => voiceStatus.classList.remove('active'), 2000);
+        };
+
+        r.onend = () => {
+          isListening = false;
+          micBtn.classList.remove('listening');
+          voiceStatus.classList.remove('active');
+        };
+
+        return r;
+      }
+
       micBtn.addEventListener('click', () => {
-        if (isListening) {
+        if (isListening && recognition) {
           recognition.stop();
           return;
         }
+
         try {
+          recognition = createRecognition();
           recognition.start();
-        } catch (e) {
-          console.error(e);
+        } catch (err) {
+          console.error('Speech recognition error:', err);
+          alert('マイクを起動できませんでした。ブラウザのマイク許可をご確認ください。');
         }
       });
-
-      recognition.onstart = () => {
-        isListening = true;
-        micBtn.classList.add('listening');
-        voiceStatus.classList.add('active');
-        voiceStatus.textContent = 'お話しください...';
-      };
-
-      recognition.onresult = (event) => {
-        const transcript = event.results[0][0].transcript;
-        const cleanText = transcript.replace(/[。、]/g, '').trim();
-        searchInput.value = cleanText;
-        const clearBtn = document.getElementById('clear-search-btn');
-        if (clearBtn) clearBtn.classList.toggle('active', cleanText.length > 0);
-        applyFilterAndSearch();
-      };
-
-      recognition.onerror = () => {
-        voiceStatus.textContent = '聞き取れませんでした';
-        setTimeout(() => voiceStatus.classList.remove('active'), 1500);
-      };
-
-      recognition.onend = () => {
-        isListening = false;
-        micBtn.classList.remove('listening');
-        voiceStatus.classList.remove('active');
-      };
     }
 
     document.getElementById('search-input').addEventListener('input', (e) => {
