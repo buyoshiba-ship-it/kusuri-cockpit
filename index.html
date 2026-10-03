@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PharmaWatch | 医薬品供給監視コックピット</title>
+  <title>医薬品供給状況ちゃんねる　コメちゃん | 医療用医薬品供給監視システム</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1399,6 +1399,9 @@
         font-size: 14px;
         padding: 12px 75px 12px 38px;
       }
+      #app-main-title {
+        font-size: 25px !important;
+      }
     }
   </style>
 </head>
@@ -1408,10 +1411,18 @@
     <header>
       <div class="brand-tag">
         <span class="pulse-dot"></span>
-        厚労省 公開データ連動（16,403品目）
+        厚労省 最新公表: <span id="mhlw-update-date">2026年10月2日</span>（<span id="header-data-count">16,405</span>品目連動）
       </div>
-      <h1>医薬品供給監視コックピット</h1>
-      <p class="subtitle">MR・薬剤師のための供給情報クイック照合ダッシュボード</p>
+      <div class="header-title-row" style="display:flex; align-items:center; gap:18px; margin-bottom:10px; flex-wrap:wrap;">
+        <img src="komechan.png" alt="コメちゃん" style="width:76px; height:76px; border-radius:50%; object-fit:cover; border:3px solid #fed7aa; box-shadow:0 4px 14px rgba(249,115,22,0.22); flex-shrink:0; background:#fff;">
+        <h1 id="app-main-title" style="margin:0; font-size:40px; font-weight:900; letter-spacing:-0.03em; line-height:1.15; color:#0f172a; text-shadow:0 1px 2px rgba(0,0,0,0.04);">医薬品供給状況ちゃんねる　コメちゃん</h1>
+      </div>
+      <p class="subtitle" style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+        <a href="https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/kenkou_iryou/iryou/kouhatu-iyaku/04_00003.html" target="_blank" rel="noopener noreferrer" style="color:var(--text-muted); text-decoration:underline; text-underline-offset:3px; transition:color 0.15s ease;" onmouseover="this.style.color='#2563eb'" onmouseout="this.style.color='var(--text-muted)'" title="厚生労働省の公式ページ（出典元）を新しいタブで開く">
+          医療用医薬品供給状況報告（厚生労働省公表） ↗
+        </a>
+        <span style="font-size:12px; color:var(--text-subtle);">| 最終更新: 2026年10月2日公表版</span>
+      </p>
     </header>
 
     <!-- 目立つモード切り替えタブ -->
@@ -1601,7 +1612,7 @@
       </p>
       <p style="color: var(--text-subtle); font-size: 11px;">
         日々の供給状況・在庫動向は変動するため、正確な最新出荷状況や発注可否については各製薬企業または医薬品卸へ直接ご確認ください。<br>
-        © PharmaWatch 医薬品供給監視コックピット
+        © 医薬品供給状況ちゃんねる　コメちゃん（医療用医薬品供給監視システム）
       </p>
     </footer>
   </div>
@@ -1686,6 +1697,11 @@
           stat.total++;
           if (type === 0) stat.normal++;
         }
+      }
+
+      const headerCountEl = document.getElementById('header-data-count');
+      if (headerCountEl) {
+        headerCountEl.textContent = total.toLocaleString();
       }
 
       document.getElementById('stat-total').textContent = total.toLocaleString();
