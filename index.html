@@ -1011,6 +1011,17 @@
     .prod-class-badge.tag-基 { background: #f3e8ff; color: #6b21a8; border: 1px solid #e9d5ff; }
     .prod-class-badge.tag-準先 { background: #ede9fe; color: #5b21b6; border: 1px solid #ddd6fe; }
     .prod-class-badge.tag-旧後 { background: #ffedd5; color: #9a3412; border: 1px solid #fed7aa; }
+    .badge-new {
+      background: #eff6ff;
+      color: #1d4ed8;
+      border: 1px solid #93c5fd;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 1px 5px;
+      border-radius: 4px;
+      box-shadow: 0 1px 2px rgba(29, 78, 216, 0.15);
+      animation: pulse-badge 2s infinite ease-in-out;
+    }
 
     /* トレンド矢印（⤴️改善 / ⤵️悪化） */
     .trend-arrow {
@@ -1363,10 +1374,36 @@
     /* スマートフォン向けレスポンシブ最適化 (768px以下) */
     @media (max-width: 768px) {
       body {
-        padding: 16px 8px;
+        padding: 12px 6px;
       }
       .container {
-        padding: 0 4px;
+        padding: 0 2px;
+      }
+      .header-title-row {
+        gap: 12px !important;
+        margin-bottom: 6px !important;
+      }
+      .header-title-row img {
+        width: 58px !important;
+        height: 58px !important;
+      }
+      #app-main-title {
+        font-size: 22px !important;
+        line-height: 1.25 !important;
+      }
+      .view-tabs-container {
+        padding: 3px;
+        gap: 4px;
+        margin-bottom: 14px;
+      }
+      .tab-btn {
+        padding: 8px 10px;
+        font-size: 13px;
+      }
+      .med-card {
+        padding: 12px 12px;
+        gap: 8px;
+        border-radius: 8px;
       }
       .card-top {
         flex-direction: column;
@@ -1378,8 +1415,12 @@
       }
       .med-title {
         font-size: 15px;
-        line-height: 1.45;
+        line-height: 1.4;
         word-break: break-all;
+      }
+      .med-maker {
+        font-size: 12px;
+        margin-top: 1px;
       }
       .badge-group {
         width: 100%;
@@ -1388,19 +1429,42 @@
         align-items: center;
         justify-content: flex-start;
         gap: 6px;
-        margin-top: 4px;
+        margin-top: 2px;
+      }
+      .badge {
+        font-size: 11px;
+        padding: 2.5px 8px;
       }
       .badge-diff {
         font-size: 10px;
-        padding: 3px 8px;
+        padding: 2px 7px;
         white-space: normal;
+      }
+      .card-meta {
+        font-size: 12px;
+        padding-top: 6px;
+        gap: 6px;
+      }
+      .meta-details {
+        gap: 6px 10px;
+      }
+      .substitute-btn {
+        width: 100%;
+        justify-content: center;
+        padding: 7px 10px;
+        font-size: 12px;
+        margin-top: 4px;
       }
       .search-input {
         font-size: 14px;
-        padding: 12px 75px 12px 38px;
+        padding: 11px 72px 11px 36px;
       }
-      #app-main-title {
-        font-size: 25px !important;
+      .quick-searches {
+        gap: 4px;
+      }
+      .quick-btn {
+        padding: 3px 7px;
+        font-size: 11.5px;
       }
     }
   </style>
@@ -1559,6 +1623,7 @@
 
       <div class="filter-tags">
         <button class="filter-btn active" data-filter="all">すべて</button>
+        <button class="filter-btn" data-filter="new" style="color:#2563eb; border-color:#93c5fd; background:#eff6ff;">🆕 今回新着（36件）</button>
         <button class="filter-btn filter-btn-improved" data-filter="improved">✨ 改善（回復）のみ</button>
         <button class="filter-btn" data-filter="alert">⚠️ 要警戒のみ（限定・停止）</button>
         <button class="filter-btn" data-filter="limited">限定出荷のみ</button>
@@ -1641,7 +1706,8 @@
     let currentDateFilter = 'all'; // 'all', '7', '14', '30'
     let currentSortField = 'default'; // 'default', 'date', 'status', 'name', 'ingredient', 'volume'
     let currentSortOrder = 'desc'; // 'asc' または 'desc'
-    let currentViewMode = 'table'; // 'table'（デフォルト）または 'card'
+    const isMobileDevice = window.innerWidth <= 768;
+    let currentViewMode = isMobileDevice ? 'card' : 'table'; // PCはテーブル、スマホはカードをデフォルトに自動判定
     let filteredResults = [];
     let visibleCount = 100;
     const PAGE_SIZE = 100;
@@ -2134,6 +2200,7 @@
         const isImproved = diff && diff.changeType === 'improved';
 
         // 状態フィルター
+        if (currentFilter === 'new' && row[13] !== 1) continue;
         if (currentFilter === 'improved' && !isImproved) continue;
         if (currentFilter === 'alert' && stType !== 1 && stType !== 2) continue;
         if (currentFilter === 'limited' && stType !== 1) continue;
@@ -2306,6 +2373,8 @@
       const updateDate = row[9] || '';
       const shipVolume = row[10] || '';
       const prodClassTag = row[11] || '';
+      const recTiming = row[12] || '';
+      const isNew = row[13] === 1;
 
       const diff = getStatusDiffInfo(row);
       let trendArrowHTML = '';
@@ -2330,7 +2399,6 @@
       // 区分バッジ（後発、先発、基礎的、準先発など）
       let prodClassHTML = '';
       if (prodClassTag) {
-        // 例: '後基', '先', '後'
         const parts = prodClassTag.match(/準先|旧後|後|先|基/g) || [prodClassTag];
         prodClassHTML = parts.map(tag => `<span class="prod-class-badge tag-${tag}">${tag}</span>`).join(' ');
       }
@@ -2369,19 +2437,26 @@
       // 理由・見込みの非該当（「７．－」「エ. －」「-」など）判定
       const hasRealReason = reason && !reason.includes('－') && reason !== '-';
       const hasRealRecovery = recovery && !recovery.includes('－') && recovery !== '-';
+      const hasRealTiming = recTiming && !recTiming.includes('－') && recTiming !== '-';
 
       let alertBox = '';
       // 通常出荷（stType === 0）の場合は不要な黄色の注意文は一切表示しない
-      if (stType !== 0 && (hasRealReason || hasRealRecovery)) {
+      if (stType !== 0 && (hasRealReason || hasRealRecovery || hasRealTiming)) {
         const alertClass = stType === 2 ? 'has-danger' : 'has-warning';
         const recTip = getRecoveryTip(recovery);
         
         alertBox = `
             <div class="alert-box ${alertClass}">
               ${hasRealReason ? `<div class="alert-row"><strong>理由:</strong> <span>${escapeHtml(reason)}</span></div>` : ''}
+              ${hasRealTiming ? `
+                <div class="alert-row">
+                  <strong>解消見込み時期:</strong> 
+                  <span style="font-weight:700; color:#dc2626; font-size:13px;">${escapeHtml(recTiming)}</span>
+                </div>
+              ` : ''}
               ${hasRealRecovery ? `
                 <div class="alert-row">
-                  <strong>見込み:</strong> 
+                  <strong>見込み状況:</strong> 
                   <span>${escapeHtml(recovery)}</span>
                   ${recTip ? `<span class="info-tip">?<span class="tip-box">${recTip}</span></span>` : ''}
                 </div>
@@ -2412,6 +2487,7 @@
           <div class="card-top">
             <div class="card-main-info">
               <div class="med-title">
+                ${isNew ? `<span class="badge-new" title="今回の厚労省更新で新規追加・更新された品目">🆕 NEW</span>` : ''}
                 ${prodClassHTML ? `<span style="display:inline-flex; gap:3px; margin-right:4px;">${prodClassHTML}</span>` : ''}
                 <span>${escapeHtml(name)}</span>
                 ${categoryTag}
@@ -2466,6 +2542,7 @@
       const shipVolume = row[10] || '';
       const prodClassTag = row[11] || '';
       const recTiming = row[12] || '';
+      const isNew = row[13] === 1;
 
       const hasRealReason = reason && !reason.includes('－') && reason !== '-';
       const hasRealRecovery = recovery && !recovery.includes('－') && recovery !== '-';
@@ -2488,16 +2565,19 @@
         }
       }
 
-      // 見込み・復帰時期のスマート合体
+      // 見込み・復帰時期のスマート合体（ねこさんスタイル：見込み時期を赤字・太字で強調）
       let recoveryMergedHTML = '<span style="color:#cbd5e1;">-</span>';
       if (hasRealTiming && hasRealRecovery) {
-        recoveryMergedHTML = `<div class="tbl-recovery" style="font-size:12px; font-weight:600;">${escapeHtml(recTiming)}</div><div style="font-size:11px; color:var(--text-subtle);">${escapeHtml(recovery)}</div>`;
+        recoveryMergedHTML = `
+          <div style="font-size:12px; font-weight:700; color:#dc2626;">${escapeHtml(recTiming)}</div>
+          <div style="font-size:11px; color:var(--text-muted);">${escapeHtml(recovery)}</div>
+        `;
       } else if (hasRealTiming) {
-        recoveryMergedHTML = `<span class="tbl-recovery" style="font-size:12px; font-weight:600;">${escapeHtml(recTiming)}</span>`;
+        recoveryMergedHTML = `<span style="font-size:12px; font-weight:700; color:#dc2626;">${escapeHtml(recTiming)}</span>`;
       } else if (hasRealRecovery) {
         const isPending = recovery.includes('未定');
-        const colorStyle = isPending ? 'color:#dc2626; font-weight:600;' : 'color:#d97706; font-weight:500;';
-        recoveryMergedHTML = `<span class="tbl-recovery" style="${colorStyle}">${escapeHtml(recovery)}</span>`;
+        const colorStyle = isPending ? 'color:#dc2626; font-weight:700;' : 'color:#d97706; font-weight:500;';
+        recoveryMergedHTML = `<span style="${colorStyle}">${escapeHtml(recovery)}</span>`;
       }
 
       const diff = getStatusDiffInfo(row);
@@ -2550,6 +2630,7 @@
           </td>
           <td>
             <div class="tbl-med-name" onclick="quickSearch('${escapeHtml(name)}')">
+              ${isNew ? `<span class="badge-new" title="今回の厚労省更新で新規追加・更新された品目">🆕 NEW</span>` : ''}
               ${prodClassHTML ? `<span>${prodClassHTML}</span>` : ''}
               <span>${escapeHtml(name)}</span>
               ${category ? `<span class="category-badge" style="font-size:10px; padding:1px 5px;">確保${category}</span>` : ''}
@@ -2931,6 +3012,10 @@
     }
 
     window.addEventListener('DOMContentLoaded', () => {
+      // デバイスに応じたボタントグル状態の同期（スマホならカードが最初からactive）
+      document.getElementById('view-card-btn').classList.toggle('active', currentViewMode === 'card');
+      document.getElementById('view-table-btn').classList.toggle('active', currentViewMode === 'table');
+
       initStats();
       setupVoiceSearch();
       setupFileUpload();

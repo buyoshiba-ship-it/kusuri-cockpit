@@ -117,10 +117,13 @@ def parse_excel_to_dataset(excel_path):
             
         prod_tag = " ".join(tags)
         
-        # 解除見込み時期 (col 17 等)
-        rec_timing = str(row[17] or "").strip() if len(row) > 17 and row[17] is not None else ""
-        if rec_timing == "None":
+        # 解除見込み時期 (col 15: 2027年1月など)
+        rec_timing = str(row[15] or "").strip() if len(row) > 15 and row[15] is not None else ""
+        if rec_timing in ["None", "－", "-"]:
             rec_timing = ""
+            
+        # 今回更新NEWマーク (col 20: 'New' の場合)
+        is_new = 1 if len(row) > 20 and str(row[20] or "").strip() == "New" else 0
             
         # ステータス区分: 0=通常, 1=限定出荷, 2=供給停止
         st_type = 0
@@ -144,7 +147,8 @@ def parse_excel_to_dataset(excel_path):
             update_date,
             ship_vol,
             prod_tag,
-            rec_timing
+            rec_timing,
+            is_new
         ])
         
     print(f"✅ 全 {len(medicine_data):,} 品目の抽出に成功しました！")
