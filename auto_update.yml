@@ -1,0 +1,47 @@
+name: Daily MHLW Medicine Supply Auto-Updater
+
+on:
+  schedule:
+    # 毎日 日本時間 朝7:00 (UTC 22:00) に自動実行
+    - cron: '0 22 * * *'
+  # 手動でもGitHub画面からポチッと実行できるようにする
+  workflow_dispatch:
+
+jobs:
+  update-supply-data:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: 📥 リポジトリのコードをチェックアウト
+        uses: actions/checkout@v4
+
+      - name: 🐍 Python環境のセットアップ (3.11)
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 📦 必要なライブラリのインストール
+        run: |
+          python -m pip install --upgrade pip
+          pip install openpyxl requests
+
+      - name: 🚀 厚労省サイトから最新Excelを取得＆data.js差分生成
+        run: |
+          python update_mhlw_data.py
+
+      - name: 📤 更新データが存在する場合のみ自動コミット＆プッシュ
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add data.js prev_medicine_data.json diff_history.json
+          
+          # 差分があるかチェック
+          if git diff --staged --quiet; then
+            echo "✅ 厚労省データに変更はありませんでした（最新状態を維持）"
+          else
+            echo "🎉 厚労省データの更新を検知！自動反映します"
+            git commit -m "🤖 [Auto-Update] 厚労省最新医薬品供給データを自動反映 (data.js)"
+            git push
+          fi

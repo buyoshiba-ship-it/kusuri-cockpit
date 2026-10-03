@@ -1444,15 +1444,24 @@
       
       <!-- ドラッグ＆ドロップ枠 -->
       <div class="upload-box" id="drop-zone" onclick="document.getElementById('file-input').click()">
-        <input type="file" id="file-input" class="upload-input-file" accept=".csv,.txt">
+        <input type="file" id="file-input" class="upload-input-file" accept=".xlsx,.xls,.csv,.txt">
         <div class="upload-icon">📂</div>
-        <div class="upload-title">薬局の採用薬リスト（CSV / テキスト）をここにドラッグ＆ドロップ</div>
+        <div class="upload-title">薬局の採用薬リスト（Excel / CSV / テキスト）をドラッグ＆ドロップ</div>
         <div class="upload-desc">
           またはここをクリックしてファイルを選択<br>
-          <span style="font-size:12px; color:var(--text-subtle);">※レセコンや在庫システムから出力したCSVをそのまま投入できます（自動で医薬品名・コードを抽出）</span>
+          <span style="font-size:12px; color:var(--text-subtle);">※Excel（.xlsx / .xls）、レセコンCSV、薬品名テキストに対応（医薬品名やコードを自動抽出）</span>
         </div>
         <div>
           <span class="upload-btn-fake">ファイルを選択して照合する</span>
+        </div>
+        <div style="margin-top: 14px; display: inline-flex; flex-direction: column; gap: 4px; padding: 8px 14px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; font-size: 11.5px; color: #166534; text-align: left; line-height: 1.5; max-width: 620px;">
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <span style="font-size: 14px; flex-shrink: 0;">🔒</span>
+            <span><strong>【完全ローカル処理・安心セキュリティ】</strong> 読み込んだファイルデータはお使いのパソコン（ブラウザ内）でのみ照合処理され、外部サーバーへの送信・流出は一切ありません。</span>
+          </div>
+          <div style="padding-left: 20px; font-size: 11px; color: #15803d;">
+            💡 <strong>さらに安心してお使いいただくために：</strong> 金額や患者情報などの不要な列が気になる場合は、事前にデータを加工して<strong>「医薬品名だけ」</strong>または<strong>「YJコードだけ」</strong>を抜き出したCSV・Excel・メモ帳テキストをご投入いただいても全く問題なく高精度に照合できます。
+          </div>
         </div>
       </div>
 
@@ -1616,6 +1625,9 @@
       </p>
     </footer>
   </div>
+
+  <!-- SheetJS (Excel .xlsx / .xls 解析用) -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
   <!-- 厚労省生データ（16,403件） -->
   <script src="data.js"></script>
@@ -1794,56 +1806,84 @@
       });
     }
 
-    // CSV解析 & 採用薬リストの照合
-    function parseCSVAndMatch(text, fileName) {
-      const lines = text.split(/\r\n|\n|\r/).filter(l => l.trim().length > 0);
-      if (lines.length === 0) return;
+    // 汎用2次元テーブル解析 & 採用薬リストの照合（Excel / CSV / テキスト共通）
+    function parseTableAndMatch(tableRows, fileName) {
+      if (!tableRows || tableRows.length === 0) return;
 
-      const headerCols = lines[0].split(',').map(c => c.replace(/^["']|["']$/g, '').trim());
-      
+      // 文字列のトリミング
+      const cleanRows = tableRows.map(row => (row || []).map(cell => String(cell || '').replace(/^["']|["']$/g, '').trim())).filter(row => row.some(cell => cell.length > 0));
+      if (cleanRows.length === 0) return;
+
       let nameColIdx = -1;
       let yjColIdx = -1;
+      let startRowIdx = 1;
 
+      // 1行目がヘッダーかどうか判定
+      const headerCols = cleanRows[0];
       for (let i = 0; i < headerCols.length; i++) {
         const h = headerCols[i];
         if (h.includes('医薬品名') || h.includes('品名') || h.includes('販売名') || h.includes('商品名') || h.includes('薬名')) {
           nameColIdx = i;
         }
-        if (h.includes('YJ') || h.includes('yj') || h.includes('薬価基準収載医薬品コード') || h.includes('コード') || h.includes('レセプト')) {
+        if (h.includes('YJ') || h.includes('yj') || h.includes('薬価基準収載医薬品コード') || h.includes('コード') || h.includes('レセプト') || h.includes('薬品コード')) {
           yjColIdx = i;
         }
       }
 
-      // ヘッダー名で特定できなかった場合、サンプル行から自動判別
-      if (lines.length > 1) {
-        const sampleCols = lines[1].split(',').map(c => c.replace(/^["']|["']$/g, '').trim());
-        if (yjColIdx === -1) {
-          for (let i = 0; i < sampleCols.length; i++) {
-            // YJコードは通常9桁または12桁の英数字（例: 2149048F1081）
-            if (/^[0-9A-Za-z]{9,12}$/.test(sampleCols[i])) {
+      // ヘッダーで特定できなかった場合、サンプル行から自動判別
+      if (nameColIdx === -1 && yjColIdx === -1) {
+        // ヘッダー無しの可能性（1行目からデータ）
+        startRowIdx = 0;
+        for (let r = 0; r < Math.min(5, cleanRows.length); r++) {
+          const sample = cleanRows[r];
+          for (let i = 0; i < sample.length; i++) {
+            if (yjColIdx === -1 && /^[0-9A-Za-z]{9,12}$/.test(sample[i])) {
               yjColIdx = i;
-              break;
             }
           }
         }
-        if (nameColIdx === -1) {
-          // 最も文字列が長い列、または日本語（ひらがな・カタカナ・漢字）を含む列を採用
-          let maxLen = 0;
-          let bestIdx = 0;
-          for (let i = 0; i < sampleCols.length; i++) {
-            if (i === yjColIdx) continue;
-            if (/[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF]/.test(sampleCols[i]) && sampleCols[i].length > maxLen) {
-              maxLen = sampleCols[i].length;
-              bestIdx = i;
+        // 最も日本語を含む列を医薬品名列に設定
+        let maxScore = 0;
+        for (let c = 0; c < 15; c++) {
+          if (c === yjColIdx) continue;
+          let score = 0;
+          for (let r = 0; r < Math.min(5, cleanRows.length); r++) {
+            const cell = cleanRows[r][c] || '';
+            if (/[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF]/.test(cell)) {
+              score += cell.length;
             }
           }
-          nameColIdx = bestIdx;
+          if (score > maxScore) {
+            maxScore = score;
+            nameColIdx = c;
+          }
+        }
+      } else {
+        // ヘッダーがある場合で片方未定ならサンプル行から補完
+        if (cleanRows.length > 1) {
+          const sample = cleanRows[1];
+          if (yjColIdx === -1) {
+            for (let i = 0; i < sample.length; i++) {
+              if (/^[0-9A-Za-z]{9,12}$/.test(sample[i])) {
+                yjColIdx = i;
+                break;
+              }
+            }
+          }
+          if (nameColIdx === -1) {
+            let maxLen = 0;
+            for (let i = 0; i < sample.length; i++) {
+              if (i === yjColIdx) continue;
+              if (/[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF]/.test(sample[i]) && sample[i].length > maxLen) {
+                maxLen = sample[i].length;
+                nameColIdx = i;
+              }
+            }
+          }
         }
       }
 
-      if (nameColIdx === -1) {
-        nameColIdx = headerCols.length > 2 ? 2 : 0;
-      }
+      if (nameColIdx === -1) nameColIdx = 0;
 
       const yjMap = new Map();
       const nameMap = new Map();
@@ -1854,14 +1894,15 @@
 
       const matchedRows = [];
       const notFoundNames = [];
-      const savedCodes = []; // ローカル保存用（YJまたは名前）
+      const savedCodes = [];
 
-      for (let i = 1; i < lines.length; i++) {
-        const cols = lines[i].split(',').map(c => c.replace(/^["']|["']$/g, '').trim());
-        if (cols.length <= nameColIdx) continue;
+      for (let i = startRowIdx; i < cleanRows.length; i++) {
+        const cols = cleanRows[i];
+        if (cols.length <= nameColIdx && (yjColIdx < 0 || cols.length <= yjColIdx)) continue;
 
         const rowYJ = yjColIdx >= 0 && cols[yjColIdx] ? cols[yjColIdx].trim() : '';
-        const rowName = cols[nameColIdx] ? cols[nameColIdx].trim() : '';
+        const rowName = nameColIdx >= 0 && cols[nameColIdx] ? cols[nameColIdx].trim() : '';
+        if (!rowYJ && !rowName) continue;
 
         let matched = null;
         if (rowYJ && yjMap.has(rowYJ)) {
@@ -2726,12 +2767,38 @@
     }
 
     function handleFile(file) {
+      const fileName = file.name || '';
+      const isExcel = /\.xlsx?$/i.test(fileName);
+
       const reader = new FileReader();
       reader.onload = (e) => {
-        let text = '';
         const buffer = e.target.result;
+
+        if (isExcel) {
+          try {
+            if (typeof XLSX === 'undefined') {
+              alert('Excel解析ライブラリを読み込み中です。少々お待ちいただき再度お試しください。');
+              return;
+            }
+            const data = new Uint8Array(buffer);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const firstSheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[firstSheetName];
+            // 2次元配列形式で抽出（空セルも保持）
+            const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
+            parseTableAndMatch(rows, fileName);
+            return;
+          } catch (err) {
+            console.error('Excel parse error:', err);
+            alert('Excelファイルの解析に失敗しました。ファイルが破損していないかご確認ください。');
+            return;
+          }
+        }
+
+        // CSV または テキストの場合
+        let text = '';
         try {
-          // まずUTF-8でのデコードを試みる（不正バイトがあれば例外へ）
+          // UTF-8 でデコード
           const utf8Decoder = new TextDecoder('utf-8', { fatal: true });
           text = utf8Decoder.decode(buffer);
         } catch (err) {
@@ -2744,7 +2811,19 @@
             text = fallbackDecoder.decode(buffer);
           }
         }
-        parseCSVAndMatch(text, file.name);
+
+        // CSV/TSV/プレーンテキストを2次元配列に変換
+        const rawLines = text.split(/\r\n|\n|\r/).filter(l => l.trim().length > 0);
+        const delimiter = (rawLines[0] && rawLines[0].includes('\t')) ? '\t' : ',';
+        const rows = rawLines.map(line => {
+          if (delimiter === '\t') {
+            return line.split('\t');
+          }
+          // カンマ区切り（簡易クォート考慮）
+          return line.split(',').map(c => c.replace(/^["']|["']$/g, ''));
+        });
+
+        parseTableAndMatch(rows, fileName);
       };
       reader.readAsArrayBuffer(file);
     }
