@@ -1379,9 +1379,56 @@
     }
 
     .sub-item.current-item {
-      border: 1.5px solid #2563eb !important;
+      border: 2px solid #2563eb !important;
       background: #eff6ff !important;
-      box-shadow: 0 1px 3px rgba(37, 99, 235, 0.08);
+      box-shadow: 0 1px 4px rgba(37, 99, 235, 0.12);
+    }
+
+    /* 同一規格・剤形（ズバリ代替候補）のステータス別背景色 */
+    .sub-item.same-spec-0 {
+      border: 1.5px solid #93c5fd !important;
+      background: #f0f7ff !important; /* 通常出荷: 清潔な淡いブルー */
+    }
+    .sub-item.same-spec-0:hover {
+      background: #e0f0fe !important;
+    }
+
+    .sub-item.same-spec-1 {
+      border: 1.5px solid #fde047 !important;
+      background: #fefce8 !important; /* 限定出荷: 注意を促す淡い黄色 */
+    }
+    .sub-item.same-spec-1:hover {
+      background: #fef9c3 !important;
+    }
+
+    .sub-item.same-spec-2 {
+      border: 1.5px solid #fca5a5 !important;
+      background: #fef2f2 !important; /* 供給停止: 警戒の淡い赤色 */
+    }
+    .sub-item.same-spec-2:hover {
+      background: #fee2e2 !important;
+    }
+
+    .sub-group-heading {
+      font-size: 11px;
+      font-weight: 700;
+      color: #475569;
+      margin-top: 10px;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .sub-group-heading::before {
+      content: "";
+      display: inline-block;
+      width: 4px;
+      height: 12px;
+      background: #3b82f6;
+      border-radius: 2px;
+    }
+    .sub-group-heading.other-heading::before {
+      background: #94a3b8;
     }
 
     .sub-name {
@@ -2566,29 +2613,45 @@
         return '<div style="font-size:12px; color:var(--text-muted); padding:8px;">成分情報がありません</div>';
       }
 
-      const others = [];
+      // 現在選択中の品目と、その同一規格プレフィックス（YJ先頭9桁: 成分+剤形規格）
       let currentItem = null;
+      const targetSpecPrefix = (currentYJ && currentYJ.length >= 9) ? currentYJ.substring(0, 9).toUpperCase() : '';
+
+      const allMatches = [];
       for (const row of MEDICINE_DATA) {
         if (normalize(row[1]) === normIng) {
           if (row[3] === currentYJ) {
             currentItem = row;
           } else {
-            others.push(row);
+            allMatches.push(row);
           }
         }
       }
 
-      // 他社品目を出荷状況（通常 ➔ 限定 ➔ 停止）でソート
-      others.sort((a, b) => a[7] - b[7]);
+      // 同一規格（例: 錠500mg）と別規格（例: 錠250mg, シロップ, 散剤）に分類
+      const sameSpecOthers = [];
+      const diffSpecOthers = [];
 
-      // 現在選択中の品目を必ず一番先頭（最上位）に配置
-      const subs = currentItem ? [currentItem, ...others] : others;
+      for (const row of allMatches) {
+        const yj = (row[3] || '').toUpperCase();
+        if (targetSpecPrefix && yj.startsWith(targetSpecPrefix)) {
+          sameSpecOthers.push(row);
+        } else {
+          diffSpecOthers.push(row);
+        }
+      }
+
+      // それぞれ出荷状況（通常 ➔ 限定 ➔ 停止）でソート
+      sameSpecOthers.sort((a, b) => a[7] - b[7]);
+      diffSpecOthers.sort((a, b) => a[7] - b[7]);
 
       const basePrice = (currentItem && currentItem[14] !== null && currentItem[14] !== undefined) ? currentItem[14] : null;
 
+      const totalCount = (currentItem ? 1 : 0) + sameSpecOthers.length + diffSpecOthers.length;
+
       let html = `
         <div class="substitute-title">
-          <span>同成分「${escapeHtml(ingredientName)}」の他社流通・薬価比較（全 ${subs.length} 件）</span>
+          <span>同成分「${escapeHtml(ingredientName)}」の他社流通・薬価比較（全 ${totalCount} 件）</span>
           <div style="display:flex; align-items:center; gap:10px;">
             <span style="font-size:11px; font-weight:normal; color:var(--text-muted);">🟢通常品を優先表示 | 薬価差額表示</span>
             ${isTableMode ? `<button type="button" class="accordion-close-btn" onclick="closeTableSubstitutes(this)">▲ 閉じる</button>` : ''}
@@ -2597,67 +2660,111 @@
         <div class="substitute-list">
       `;
 
-      if (subs.length === 0) {
+      if (totalCount === 0) {
         html += `<div style="font-size:12px; color:var(--text-muted); padding:4px;">同成分の品目は見つかりませんでした。</div>`;
-      } else {
-        for (const sub of subs) {
-          const isCurrent = (sub[3] === currentYJ);
-          let badgeClass = 'badge-0';
-          let badgeLabel = '通常出荷';
-          if (sub[7] === 1) {
-            badgeClass = 'badge-1';
-            badgeLabel = '限定出荷';
-          } else if (sub[7] === 2) {
-            badgeClass = 'badge-2';
-            badgeLabel = '供給停止';
-          }
+        html += `</div>`;
+        return html;
+      }
 
-          const subTag = sub[11] || '';
-          let subTagHTML = '';
-          if (subTag) {
-            const parts = subTag.match(/準先|旧後|後|先|基/g) || [subTag];
-            subTagHTML = parts.map(t => `<span class="prod-class-badge tag-${t}" style="font-size:10px; padding:0 4px;">${t}</span>`).join(' ');
-          }
+      // 1つのアイテムを描画する内部関数
+      const renderItemRow = (sub, isCurrent, isSameSpec) => {
+        let badgeClass = 'badge-0';
+        let badgeLabel = '通常出荷';
+        if (sub[7] === 1) {
+          badgeClass = 'badge-1';
+          badgeLabel = '限定出荷';
+        } else if (sub[7] === 2) {
+          badgeClass = 'badge-2';
+          badgeLabel = '供給停止';
+        }
 
-          const subPrice = (sub[14] !== null && sub[14] !== undefined) ? sub[14] : null;
-          let priceHTML = '';
-          if (subPrice !== null) {
-            let diffHTML = '';
-            if (basePrice !== null && !isCurrent) {
-              const diff = Math.round((subPrice - basePrice) * 100) / 100;
-              if (diff < -0.01) {
-                diffHTML = `<span class="price-diff-badge price-diff-cheaper" title="現在の品目より安価">${diff.toFixed(2)}円 お得✨</span>`;
-              } else if (diff > 0.01) {
-                diffHTML = `<span class="price-diff-badge price-diff-higher" title="現在の品目より高価">+${diff.toFixed(2)}円 差額有</span>`;
-              } else {
-                diffHTML = `<span class="price-diff-badge price-diff-same" title="現在の品目と同額">±0円 同額</span>`;
-              }
-            } else if (isCurrent) {
-              diffHTML = `<span class="price-diff-badge" style="background:#e2e8f0; color:#334155; font-weight:700;">基準薬価</span>`;
+        const subTag = sub[11] || '';
+        let subTagHTML = '';
+        if (subTag) {
+          const parts = subTag.match(/準先|旧後|後|先|基/g) || [subTag];
+          subTagHTML = parts.map(t => `<span class="prod-class-badge tag-${t}" style="font-size:10px; padding:0 4px;">${t}</span>`).join(' ');
+        }
+
+        const subPrice = (sub[14] !== null && sub[14] !== undefined) ? sub[14] : null;
+        let priceHTML = '';
+        if (subPrice !== null) {
+          let diffHTML = '';
+          if (basePrice !== null && !isCurrent) {
+            const diff = Math.round((subPrice - basePrice) * 100) / 100;
+            if (diff < -0.01) {
+              diffHTML = `<span class="price-diff-badge price-diff-cheaper" title="現在の品目より安価">${diff.toFixed(2)}円 お得✨</span>`;
+            } else if (diff > 0.01) {
+              diffHTML = `<span class="price-diff-badge price-diff-higher" title="現在の品目より高価">+${diff.toFixed(2)}円 差額有</span>`;
+            } else {
+              diffHTML = `<span class="price-diff-badge price-diff-same" title="現在の品目と同額">±0円 同額</span>`;
             }
-            priceHTML = `
-              <div class="sub-price-pill" title="厚生労働省 薬価基準">
-                <span>薬価: <strong>${subPrice.toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 2})}円</strong></span>
-                ${diffHTML}
-              </div>
-            `;
+          } else if (isCurrent) {
+            diffHTML = `<span class="price-diff-badge" style="background:#e2e8f0; color:#334155; font-weight:700;">基準薬価</span>`;
           }
-
-          html += `
-            <div class="sub-item ${isCurrent ? 'current-item' : ''}">
-              <div style="flex:1; min-width:0; padding-right:8px;">
-                <div class="sub-name" style="word-break:break-word;">
-                  ${subTagHTML ? `${subTagHTML} ` : ''}${escapeHtml(sub[0])}
-                  ${isCurrent ? '<span style="font-size:10px; background:#2563eb; color:#fff; font-weight:700; padding:2px 6px; border-radius:4px; margin-left:6px; display:inline-block;">★ 現在の薬</span>' : ''}
-                </div>
-                <div class="sub-maker">${escapeHtml(sub[2])} | YJ: ${escapeHtml(sub[3])} ${sub[10] ? `| 📦${escapeHtml(sub[10])}` : ''}</div>
-              </div>
-              <div class="sub-item-right">
-                ${priceHTML}
-                <span class="sub-badge ${badgeClass}">${badgeLabel}</span>
-              </div>
+          priceHTML = `
+            <div class="sub-price-pill" title="厚生労働省 薬価基準">
+              <span>薬価: <strong>${subPrice.toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 2})}円</strong></span>
+              ${diffHTML}
             </div>
           `;
+        }
+
+        // 背景クラスの判定：
+        // 現在の薬 ➔ current-item
+        // 同一規格の代替候補 ➔ same-spec-0 (通常・青系), same-spec-1 (限定・黄系), same-spec-2 (停止・赤系)
+        // 別規格 ➔ 通常の背景（スタイルのまま）
+        let itemClass = 'sub-item';
+        if (isCurrent) {
+          itemClass += ' current-item';
+        } else if (isSameSpec) {
+          itemClass += ` same-spec-${sub[7]}`;
+        }
+
+        return `
+          <div class="${itemClass}">
+            <div style="flex:1; min-width:0; padding-right:8px;">
+              <div class="sub-name" style="word-break:break-word;">
+                ${subTagHTML ? `${subTagHTML} ` : ''}${escapeHtml(sub[0])}
+                ${isCurrent ? '<span style="font-size:10px; background:#2563eb; color:#fff; font-weight:700; padding:2px 6px; border-radius:4px; margin-left:6px; display:inline-block;">★ 現在の薬</span>' : ''}
+                ${(!isCurrent && isSameSpec) ? '<span style="font-size:10px; background:#e0e7ff; color:#3730a3; font-weight:700; padding:1px 5px; border-radius:3px; margin-left:4px; border:1px solid #c7d2fe;">同規格・同剤形</span>' : ''}
+              </div>
+              <div class="sub-maker">${escapeHtml(sub[2])} | YJ: ${escapeHtml(sub[3])} ${sub[10] ? `| 📦${escapeHtml(sub[10])}` : ''}</div>
+            </div>
+            <div class="sub-item-right">
+              ${priceHTML}
+              <span class="sub-badge ${badgeClass}">${badgeLabel}</span>
+            </div>
+          </div>
+        `;
+      };
+
+      // ①【最上位】現在選択中の薬
+      if (currentItem) {
+        html += renderItemRow(currentItem, true, true);
+      }
+
+      // ②【上位グループ】同一規格・剤形の代替品（カルボシステイン500mg錠など）
+      if (sameSpecOthers.length > 0) {
+        html += `
+          <div class="sub-group-heading">
+            <span>🎯 同一規格・同剤形の代替候補（全 ${sameSpecOthers.length} 品目）</span>
+            <span style="font-size:10px; font-weight:normal; color:var(--text-muted);">※出荷状況に応じてハイライト表示</span>
+          </div>
+        `;
+        for (const sub of sameSpecOthers) {
+          html += renderItemRow(sub, false, true);
+        }
+      }
+
+      // ③【下位グループ】その他の規格・剤形（250mg錠、シロップ、散剤など）
+      if (diffSpecOthers.length > 0) {
+        html += `
+          <div class="sub-group-heading other-heading" style="margin-top:16px;">
+            <span>📋 その他の規格・剤形（全 ${diffSpecOthers.length} 品目）</span>
+          </div>
+        `;
+        for (const sub of diffSpecOthers) {
+          html += renderItemRow(sub, false, false);
         }
       }
 
