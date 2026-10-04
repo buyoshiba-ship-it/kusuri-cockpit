@@ -273,7 +273,7 @@
       display: flex;
       align-items: center;
       flex-wrap: wrap;
-      gap: 10px;
+      gap: 8px;
     }
 
     .summary-title-btn {
@@ -1809,11 +1809,11 @@
           <button type="button" class="summary-title-btn" id="watch-summary-toggle-btn" onclick="toggleWatchlistStats()">
             <span>🏥 登録採用結果</span>
             <span class="summary-title-icon" id="watch-summary-toggle-icon">▼</span>
-            <span id="watch-file-name" style="font-size:12px; font-weight:normal; color:var(--text-muted); margin-left:4px;"></span>
           </button>
           <div class="summary-actions">
             <button class="clear-btn" onclick="clearWatchlist()" title="登録した採用薬リストを解除します">✕ 登録解除</button>
           </div>
+          <span id="watch-file-name" style="font-size:11.5px; font-weight:normal; color:var(--text-muted); width:100%; margin-top:2px;"></span>
         </div>
 
         <div class="watchlist-stats-grid">
@@ -2114,8 +2114,8 @@
       if (toggleIcon) toggleIcon.textContent = isGlobalStatsOpen ? '▲' : '▼';
     }
 
-    // 採用薬チェック結果パネルの開閉トグル
-    let isWatchlistStatsOpen = true; // デフォルトで展開表示
+    // 採用薬チェック結果パネルの開閉トグル（デフォルトで閉じた状態）
+    let isWatchlistStatsOpen = false;
     function toggleWatchlistStats() {
       const statsGrid = document.querySelector('.watchlist-stats-grid');
       const toggleBtn = document.getElementById('watch-summary-toggle-btn');
@@ -2398,14 +2398,14 @@
       badgeContainer.innerHTML = `<span class="registered-badge">登録済</span>`;
       fileNameEl.textContent = `（ファイル: ${fileName} / 照合成功: ${matchedCount}品目${notFoundCount > 0 ? `、未該当: ${notFoundCount}件` : ''}）`;
 
-      // 初期状態で集計パネルを展開状態にする
+      // 初期状態では集計パネルを閉じた状態（コンパクト表示）にする
       const statsGrid = document.querySelector('.watchlist-stats-grid');
       const toggleBtn = document.getElementById('watch-summary-toggle-btn');
       const toggleIcon = document.getElementById('watch-summary-toggle-icon');
-      if (statsGrid) statsGrid.classList.add('open');
-      if (toggleBtn) toggleBtn.classList.add('open');
-      if (toggleIcon) toggleIcon.textContent = '▲';
-      isWatchlistStatsOpen = true;
+      if (statsGrid) statsGrid.classList.remove('open');
+      if (toggleBtn) toggleBtn.classList.remove('open');
+      if (toggleIcon) toggleIcon.textContent = '▼';
+      isWatchlistStatsOpen = false;
 
       let normal = 0, limited = 0, stopped = 0, improved = 0;
       for (const row of myAdoptionList) {
