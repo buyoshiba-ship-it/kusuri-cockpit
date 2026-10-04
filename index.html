@@ -453,13 +453,6 @@
       border-color: #86efac;
     }
 
-    .watchlist-stats-grid {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 12px;
-      margin-bottom: 0;
-    }
-
     @media (max-width: 900px) {
       .watchlist-stats-grid {
         grid-template-columns: repeat(3, 1fr);
@@ -1385,6 +1378,12 @@
       background: #f1f5f9;
     }
 
+    .sub-item.current-item {
+      border: 1.5px solid #2563eb !important;
+      background: #eff6ff !important;
+      box-shadow: 0 1px 3px rgba(37, 99, 235, 0.08);
+    }
+
     .sub-name {
       font-weight: 600;
       color: #0f172a;
@@ -2090,14 +2089,15 @@
     }
 
     // 採用薬チェック結果パネルの開閉トグル
-    let isWatchlistStatsOpen = false;
+    let isWatchlistStatsOpen = true; // デフォルトで展開表示
     function toggleWatchlistStats() {
-      isWatchlistStatsOpen = !isWatchlistStatsOpen;
       const statsGrid = document.querySelector('.watchlist-stats-grid');
       const toggleBtn = document.getElementById('watch-summary-toggle-btn');
       const toggleIcon = document.getElementById('watch-summary-toggle-icon');
+      if (!statsGrid) return;
 
-      if (statsGrid) statsGrid.classList.toggle('open', isWatchlistStatsOpen);
+      isWatchlistStatsOpen = !statsGrid.classList.contains('open');
+      statsGrid.classList.toggle('open', isWatchlistStatsOpen);
       if (toggleBtn) toggleBtn.classList.toggle('open', isWatchlistStatsOpen);
       if (toggleIcon) toggleIcon.textContent = isWatchlistStatsOpen ? '▲' : '▼';
     }
@@ -2372,6 +2372,15 @@
       badgeContainer.innerHTML = `<span class="registered-badge">登録済</span>`;
       fileNameEl.textContent = `（ファイル: ${fileName} / 照合成功: ${matchedCount}品目${notFoundCount > 0 ? `、未該当: ${notFoundCount}件` : ''}）`;
 
+      // 初期状態で集計パネルを展開状態にする
+      const statsGrid = document.querySelector('.watchlist-stats-grid');
+      const toggleBtn = document.getElementById('watch-summary-toggle-btn');
+      const toggleIcon = document.getElementById('watch-summary-toggle-icon');
+      if (statsGrid) statsGrid.classList.add('open');
+      if (toggleBtn) toggleBtn.classList.add('open');
+      if (toggleIcon) toggleIcon.textContent = '▲';
+      isWatchlistStatsOpen = true;
+
       let normal = 0, limited = 0, stopped = 0, improved = 0;
       for (const row of myAdoptionList) {
         const type = row[7];
@@ -2534,18 +2543,23 @@
         return '<div style="font-size:12px; color:var(--text-muted); padding:8px;">成分情報がありません</div>';
       }
 
-      const subs = [];
+      const others = [];
       let currentItem = null;
       for (const row of MEDICINE_DATA) {
         if (normalize(row[1]) === normIng) {
-          subs.push(row);
           if (row[3] === currentYJ) {
             currentItem = row;
+          } else {
+            others.push(row);
           }
         }
       }
 
-      subs.sort((a, b) => a[7] - b[7]);
+      // 他社品目を出荷状況（通常 ➔ 限定 ➔ 停止）でソート
+      others.sort((a, b) => a[7] - b[7]);
+
+      // 現在選択中の品目を必ず一番先頭（最上位）に配置
+      const subs = currentItem ? [currentItem, ...others] : others;
 
       const basePrice = (currentItem && currentItem[14] !== null && currentItem[14] !== undefined) ? currentItem[14] : null;
 
@@ -2592,6 +2606,8 @@
               } else {
                 diffHTML = `<span class="price-diff-badge price-diff-same" title="現在の品目と同額">±0円 同額</span>`;
               }
+            } else if (isCurrent) {
+              diffHTML = `<span class="price-diff-badge" style="background:#e2e8f0; color:#334155; font-weight:700;">基準薬価</span>`;
             }
             priceHTML = `
               <div class="sub-price-pill" title="厚生労働省 薬価基準">
@@ -2602,11 +2618,11 @@
           }
 
           html += `
-            <div class="sub-item" style="${isCurrent ? 'border: 1.5px solid #64748b; background:#f8fafc;' : ''}">
+            <div class="sub-item ${isCurrent ? 'current-item' : ''}">
               <div style="flex:1; min-width:0; padding-right:8px;">
                 <div class="sub-name" style="word-break:break-word;">
                   ${subTagHTML ? `${subTagHTML} ` : ''}${escapeHtml(sub[0])}
-                  ${isCurrent ? '<span style="font-size:10px; background:#475569; color:#fff; padding:1px 5px; border-radius:3px; margin-left:4px;">現在選択中</span>' : ''}
+                  ${isCurrent ? '<span style="font-size:10px; background:#2563eb; color:#fff; font-weight:700; padding:2px 6px; border-radius:4px; margin-left:6px; display:inline-block;">★ 現在の薬</span>' : ''}
                 </div>
                 <div class="sub-maker">${escapeHtml(sub[2])} | YJ: ${escapeHtml(sub[3])} ${sub[10] ? `| 📦${escapeHtml(sub[10])}` : ''}</div>
               </div>
