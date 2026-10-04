@@ -176,31 +176,29 @@
     .unregistered-badge {
       display: inline-flex;
       align-items: center;
-      gap: 3px;
-      font-size: 10.5px;
-      font-weight: 700;
-      padding: 2.5px 7px;
-      border-radius: 9999px;
-      background: #ef4444;
-      color: #ffffff;
-      box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
-      animation: pulse-badge 2s infinite ease-in-out;
-    }
-
-    @keyframes pulse-badge {
-      0% { transform: scale(1); }
-      50% { transform: scale(1.05); }
-      100% { transform: scale(1); }
-    }
-
-    .registered-badge {
+      justify-content: center;
       font-size: 11px;
       font-weight: 700;
       padding: 3px 8px;
       border-radius: 9999px;
-      background: #dcfce7;
-      color: #15803d;
-      border: 1px solid #bbf7d0;
+      background: #dc2626;
+      color: #ffffff;
+      box-shadow: 0 1px 3px rgba(220, 38, 38, 0.3);
+      letter-spacing: 0.02em;
+    }
+
+    .registered-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 9999px;
+      background: #16a34a;
+      color: #ffffff;
+      box-shadow: 0 1px 3px rgba(22, 163, 74, 0.3);
+      letter-spacing: 0.02em;
     }
 
     .tab-badge-normal {
@@ -269,9 +267,9 @@
     .watchlist-summary {
       display: none;
       background: var(--surface);
-      border: 1px solid var(--border);
+      border: 1.5px solid #cbd5e1;
       border-radius: var(--radius);
-      padding: 20px;
+      padding: 14px 16px;
       margin-bottom: 20px;
       box-shadow: var(--shadow-sm);
     }
@@ -280,72 +278,75 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 16px;
       flex-wrap: wrap;
       gap: 10px;
     }
 
-    .summary-title {
-      font-size: 16px;
+    .summary-title-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: transparent;
+      border: none;
+      font-size: 15px;
       font-weight: 700;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .storage-indicator {
-      font-size: 11px;
-      font-weight: normal;
-      background: #f1f5f9;
-      color: #475569;
-      padding: 2px 8px;
-      border-radius: 4px;
-      border: 1px solid #e2e8f0;
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .summary-actions {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-    }
-
-    .reupload-btn {
-      font-size: 12px;
-      font-weight: 600;
-      padding: 5px 12px;
-      background: #f1f5f9;
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      color: var(--text);
+      color: #0f172a;
       cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      transition: all 0.1s;
+      padding: 4px 0;
+      font-family: inherit;
     }
 
-    .reupload-btn:hover {
-      background: #e2e8f0;
-      border-color: #cbd5e1;
+    .summary-title-btn:hover {
+      color: #0284c7;
+    }
+
+    .summary-title-icon {
+      display: inline-block;
+      font-size: 12px;
+      color: #64748b;
+      transition: transform 0.2s ease;
+    }
+
+    .summary-title-btn.open .summary-title-icon {
+      transform: rotate(180deg);
     }
 
     .clear-btn {
       font-size: 12px;
-      padding: 5px 10px;
-      background: transparent;
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      color: var(--text-muted);
+      font-weight: 700;
+      padding: 6px 14px;
+      background: #fef2f2;
+      border: 1.5px solid #f87171;
+      border-radius: 6px;
+      color: #dc2626;
       cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      box-shadow: 0 1px 2px rgba(220, 38, 38, 0.1);
+      transition: all 0.15s ease;
+      font-family: inherit;
     }
 
     .clear-btn:hover {
-      background: #fee2e2;
-      color: var(--danger);
-      border-color: #fca5a5;
+      background: #dc2626;
+      color: #ffffff;
+      border-color: #dc2626;
+      box-shadow: 0 2px 4px rgba(220, 38, 38, 0.25);
+    }
+
+    .watchlist-stats-grid {
+      display: none; /* 折りたたみ（初期状態は隠す） */
+      grid-template-columns: repeat(5, 1fr);
+      gap: 12px;
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px dashed var(--border);
+      animation: fadeIn 0.2s ease-out;
+    }
+
+    .watchlist-stats-grid.open {
+      display: grid !important;
     }
 
     /* 統計グリッド折りたたみトグル */
@@ -1654,9 +1655,8 @@
       </button>
       <button class="tab-btn tab-btn-watchlist" id="tab-watchlist" onclick="switchTab('watchlist')">
         <span style="font-weight:700;">🏥 採用薬監視</span>
-        <span class="tab-hint-tag">Excel/CSV照合</span>
         <span id="tab-watch-badge-container">
-          <span class="unregistered-badge">● 未登録</span>
+          <span class="unregistered-badge">未登録</span>
         </span>
       </button>
     </div>
@@ -1687,19 +1687,16 @@
         </div>
       </div>
 
-      <!-- 採用薬アラート概要 -->
+      <!-- 採用薬アラート概要（折りたたみ可能） -->
       <div id="watchlist-summary" class="watchlist-summary">
         <div class="summary-header">
-          <div class="summary-title">
-            <span>🏥 登録採用薬の供給チェック結果</span>
-            <span id="watch-file-name" style="font-size:13px; font-weight:normal; color:var(--text-muted);"></span>
-            <span class="storage-indicator">💾 ブラウザ保存中（次回も自動復元）</span>
-          </div>
+          <button type="button" class="summary-title-btn" id="watch-summary-toggle-btn" onclick="toggleWatchlistStats()">
+            <span>🏥 登録採用結果</span>
+            <span class="summary-title-icon" id="watch-summary-toggle-icon">▼</span>
+            <span id="watch-file-name" style="font-size:12px; font-weight:normal; color:var(--text-muted); margin-left:4px;"></span>
+          </button>
           <div class="summary-actions">
-            <button class="reupload-btn" onclick="toggleUploadBox()">
-              <span>📂 採用リストを変更（再アップロード）</span>
-            </button>
-            <button class="clear-btn" onclick="clearWatchlist()">✕ 登録解除</button>
+            <button class="clear-btn" onclick="clearWatchlist()" title="登録した採用薬リストを解除します">✕ 登録解除</button>
           </div>
         </div>
 
@@ -2006,6 +2003,19 @@
       if (toggleIcon) toggleIcon.textContent = isGlobalStatsOpen ? '▲' : '▼';
     }
 
+    // 採用薬チェック結果パネルの開閉トグル
+    let isWatchlistStatsOpen = false;
+    function toggleWatchlistStats() {
+      isWatchlistStatsOpen = !isWatchlistStatsOpen;
+      const statsGrid = document.querySelector('.watchlist-stats-grid');
+      const toggleBtn = document.getElementById('watch-summary-toggle-btn');
+      const toggleIcon = document.getElementById('watch-summary-toggle-icon');
+
+      if (statsGrid) statsGrid.classList.toggle('open', isWatchlistStatsOpen);
+      if (toggleBtn) toggleBtn.classList.toggle('open', isWatchlistStatsOpen);
+      if (toggleIcon) toggleIcon.textContent = isWatchlistStatsOpen ? '▲' : '▼';
+    }
+
     function toggleUploadBox() {
       const dropZone = document.getElementById('drop-zone');
       dropZone.style.display = (dropZone.style.display === 'none' || dropZone.style.display === '') ? 'block' : 'none';
@@ -2273,7 +2283,7 @@
       const fileNameEl = document.getElementById('watch-file-name');
 
       summaryBox.style.display = 'block';
-      badgeContainer.innerHTML = `<span class="registered-badge">✓ ${matchedCount}品目 登録中</span>`;
+      badgeContainer.innerHTML = `<span class="registered-badge">登録済</span>`;
       fileNameEl.textContent = `（ファイル: ${fileName} / 照合成功: ${matchedCount}品目${notFoundCount > 0 ? `、未該当: ${notFoundCount}件` : ''}）`;
 
       let normal = 0, limited = 0, stopped = 0, improved = 0;
@@ -2310,7 +2320,7 @@
 
       document.getElementById('watchlist-summary').style.display = 'none';
       document.getElementById('drop-zone').style.display = 'block';
-      document.getElementById('tab-watch-badge-container').innerHTML = `<span class="unregistered-badge">● 未登録</span>`;
+      document.getElementById('tab-watch-badge-container').innerHTML = `<span class="unregistered-badge">未登録</span>`;
       document.getElementById('file-input').value = '';
       applyFilterAndSearch();
     }
