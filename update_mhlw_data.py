@@ -1,7 +1,8 @@
 """
 update_mhlw_data.py
-厚生労働省の公式ページから最新の「医療用医薬品供給状況」Excelを自動ダウンロードし、
-Webアプリ（cockpit.html）用の data.js を自動更新＆差分履歴（status_history.json）を記録するスクリプト。
+厚生労働省の公式ページから最新の「医療用医薬品供給状況」Excelおよび
+最新の「薬価基準収載品目リスト」Excelを自動ダウンロード・解析し、
+Webアプリ（cockpit.html / index.html）用の data.js を自動更新＆差分履歴（diff_history.json）を記録するスクリプト。
 """
 
 import os
@@ -9,18 +10,23 @@ import re
 import ssl
 import json
 import urllib.request
+import urllib.parse
 import openpyxl
+import io
 import sys
 
 if sys.stdout.encoding != 'utf-8':
     sys.stdout.reconfigure(encoding='utf-8')
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-MHLW_PAGE_URL = "https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/kenkou_iryou/iryou/kouhatu-iyaku/04_00003.html"
+MHLW_SUPPLY_URL = "https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/kenkou_iryou/iryou/kouhatu-iyaku/04_00003.html"
+MHLW_PRICE_PORTAL = "https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/0000078916.html"
+
 DATA_JS_PATH = os.path.join(BASE_DIR, "data.js")
 PREV_JSON_PATH = os.path.join(BASE_DIR, "prev_medicine_data.json")
 DIFF_HISTORY_PATH = os.path.join(BASE_DIR, "diff_history.json")
-DOWNLOAD_EXCEL_PATH = os.path.join(BASE_DIR, "mhlw_latest_supply.xlsx")
+DOWNLOAD_SUPPLY_PATH = os.path.join(BASE_DIR, "mhlw_latest_supply.xlsx")
+YAKKA_MASTER_PATH = os.path.join(BASE_DIR, "yakka_master.json")
 
 def get_ssl_context():
     ctx = ssl.create_default_context()
@@ -28,12 +34,12 @@ def get_ssl_context():
     ctx.verify_mode = ssl.CERT_NONE
     return ctx
 
-def fetch_latest_excel_url():
-    print("🔍 厚生労働省の最新ページを確認中...")
-    req = urllib.request.Request(
-        MHLW_PAGE_URL, 
-        headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
-    )
+def get_headers():
+    return {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
+
+def fetch_latest_supply_excel_url():
+    print("🔍 [供給データ] 厚生労働省の最新ページを確認中...")
+    req = urllib.request.Request(MHLW_SUPPLY_URL, headers=get_headers())
     ctx = get_ssl_context()
     
     with urllib.request.urlopen(req, context=ctx) as res:
@@ -41,36 +47,119 @@ def fetch_latest_excel_url():
     
     matches = re.findall(r'<a[^>]+href=["\']([^"\']+\.xlsx)["\'][^>]*>(.*?)</a>', html, re.DOTALL | re.IGNORECASE)
     if not matches:
-        raise Exception("厚労省ページからExcelファイルのリンクが見つかりませんでした。")
+        raise Exception("厚労省供給状況ページからExcelファイルのリンクが見つかりませんでした。")
     
     for href, title in matches:
         clean_title = re.sub(r'<[^>]+>', '', title).strip()
         if "医療用医薬品供給状況" in clean_title or "kyoukyu" in href.lower() or "iyakuhin" in href.lower():
-            full_url = urllib.parse.urljoin(MHLW_PAGE_URL, href)
-            print(f"✅ 最新Excelを発見: {clean_title}")
+            full_url = urllib.parse.urljoin(MHLW_SUPPLY_URL, href)
+            print(f"✅ 最新供給Excelを発見: {clean_title}")
             print(f"🔗 URL: {full_url}")
             return full_url, clean_title
 
     # マッチしなかった場合は最初のxlsxを採用
     href, title = matches[0]
-    full_url = urllib.parse.urljoin(MHLW_PAGE_URL, href)
-    print(f"✅ Excelを発見: {title.strip()} ({full_url})")
+    full_url = urllib.parse.urljoin(MHLW_SUPPLY_URL, href)
+    print(f"✅ 供給Excelを発見: {title.strip()} ({full_url})")
     return full_url, title.strip()
 
-def download_excel(url):
-    print(f"📥 最新Excelをダウンロード中...")
-    req = urllib.request.Request(
-        url,
-        headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
-    )
+def download_supply_excel(url):
+    print("📥 最新供給状況Excelをダウンロード中...")
+    req = urllib.request.Request(url, headers=get_headers())
     ctx = get_ssl_context()
-    with urllib.request.urlopen(req, context=ctx) as res, open(DOWNLOAD_EXCEL_PATH, 'wb') as f:
+    with urllib.request.urlopen(req, context=ctx) as res, open(DOWNLOAD_SUPPLY_PATH, 'wb') as f:
         f.write(res.read())
-    size_mb = os.path.getsize(DOWNLOAD_EXCEL_PATH) / (1024 * 1024)
+    size_mb = os.path.getsize(DOWNLOAD_SUPPLY_PATH) / (1024 * 1024)
     print(f"✅ ダウンロード完了: {size_mb:.2f} MB")
 
-def parse_excel_to_dataset(excel_path):
-    print("⚙️ Excelデータを解析・構造化中...")
+def fetch_latest_yakka_dictionary():
+    """
+    厚生労働省の薬価基準収載品目ポータルから最新のExcel（内用薬、注射薬、外用薬、歯科用薬）を取得し、
+    YJコード -> 薬価(float) の辞書を作成して返す。
+    取得に失敗した場合は既存の yakka_master.json をフォールバックとして使用。
+    """
+    print("💊 [薬価データ] 厚生労働省の薬価基準収載品目ポータルを確認中...")
+    ctx = get_ssl_context()
+    try:
+        req = urllib.request.Request(MHLW_PRICE_PORTAL, headers=get_headers())
+        with urllib.request.urlopen(req, context=ctx) as resp:
+            html = resp.read().decode('utf-8', errors='ignore')
+
+        topic_links = re.findall(r'<a[^>]+href=["\']([^"\']+/topics/[^"\']+\.html)["\'][^>]*>(.*?)</a>', html, re.I | re.S)
+        target_page_url = None
+        for href, text in topic_links:
+            clean_text = re.sub(r'<[^>]+>', '', text).strip()
+            if "適用" in clean_text or "薬価基準収載品目リスト" in clean_text:
+                target_page_url = urllib.parse.urljoin(MHLW_PRICE_PORTAL, href)
+                print(f"  🎯 最新薬価告示ページを発見: {clean_text} ({target_page_url})")
+                break
+
+        if not target_page_url and topic_links:
+            target_page_url = urllib.parse.urljoin(MHLW_PRICE_PORTAL, topic_links[0][0])
+
+        if not target_page_url:
+            raise Exception("薬価詳細ページのリンクが見つかりませんでした。")
+
+        req_page = urllib.request.Request(target_page_url, headers=get_headers())
+        with urllib.request.urlopen(req_page, context=ctx) as resp:
+            page_html = resp.read().decode('utf-8', errors='ignore')
+
+        excel_links = re.findall(r'<a[^>]+href=["\']([^"\']+\.xlsx)["\'][^>]*>(.*?)</a>', page_html, re.I | re.S)
+        category_files = {}
+        for href, text in excel_links:
+            full_href = urllib.parse.urljoin(target_page_url, href)
+            m = re.search(r'[-_](0[1-4])\.xlsx$', href, re.I)
+            if m:
+                cat_num = m.group(1)
+                if cat_num not in category_files:
+                    category_files[cat_num] = full_href
+
+        if not category_files:
+            raise Exception("薬価Excelファイルリンクが抽出できませんでした。")
+
+        yakka_dict = {}
+        for cat, url in sorted(category_files.items()):
+            req_file = urllib.request.Request(url, headers=get_headers())
+            with urllib.request.urlopen(req_file, context=ctx) as resp:
+                wb = openpyxl.load_workbook(io.BytesIO(resp.read()), read_only=True)
+                sheet = wb.active
+                
+                yj_col = 1
+                price_col = 12
+                for i, row in enumerate(sheet.iter_rows(values_only=True)):
+                    if i == 0:
+                        for col_idx, val in enumerate(row):
+                            s = str(val or "")
+                            if "コード" in s:
+                                yj_col = col_idx
+                            elif "薬価" in s and "基準" not in s:
+                                price_col = col_idx
+                        continue
+                    if not row or len(row) <= max(yj_col, price_col):
+                        continue
+                    yj = str(row[yj_col] or "").strip()
+                    raw_price = row[price_col]
+                    if not yj or raw_price is None:
+                        continue
+                    try:
+                        yakka_dict[yj] = round(float(raw_price), 2)
+                    except (ValueError, TypeError):
+                        pass
+
+        print(f"✅ 厚労省薬価リスト解析完了: 合計 {len(yakka_dict):,} 件の薬価を同期")
+        with open(YAKKA_MASTER_PATH, 'w', encoding='utf-8') as f:
+            json.dump(yakka_dict, f, ensure_ascii=False)
+        return yakka_dict
+
+    except Exception as e:
+        print(f"⚠️ 薬価の最新ダウンロード・解析中にエラー（既存マスターを使用します）: {e}")
+        if os.path.exists(YAKKA_MASTER_PATH):
+            with open(YAKKA_MASTER_PATH, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        return {}
+
+def parse_excel_to_dataset(excel_path, yakka_dict):
+    print("⚙️ 供給状況Excelデータを解析・構造化中...")
     wb = openpyxl.load_workbook(excel_path, read_only=True)
     ws = wb.active
     
@@ -134,24 +223,30 @@ def parse_excel_to_dataset(excel_path):
         else:
             st_type = 0
             
+        # 薬価 (yakka_masterから参照、存在しない場合はNone)
+        price = yakka_dict.get(yj_code, None)
+
         medicine_data.append([
-            name,
-            ingredient,
-            maker,
-            yj_code,
-            status_str,
-            reason,
-            recovery,
-            st_type,
-            category,
-            update_date,
-            ship_vol,
-            prod_tag,
-            rec_timing,
-            is_new
+            name,         # 0
+            ingredient,   # 1
+            maker,        # 2
+            yj_code,      # 3
+            status_str,   # 4
+            reason,       # 5
+            recovery,     # 6
+            st_type,      # 7
+            category,     # 8
+            update_date,  # 9
+            ship_vol,     # 10
+            prod_tag,     # 11
+            rec_timing,   # 12
+            is_new,       # 13
+            price         # 14 (薬価 float または None)
         ])
         
     print(f"✅ 全 {len(medicine_data):,} 品目の抽出に成功しました！")
+    matched_price_count = sum(1 for m in medicine_data if m[14] is not None)
+    print(f"💰 薬価紐付け完了: {matched_price_count:,} 品目 ({matched_price_count/len(medicine_data)*100:.1f}%)")
     return medicine_data
 
 def detect_diff_and_save(new_data):
@@ -238,14 +333,24 @@ def export_data_js(medicine_data):
 
 def main():
     print("=" * 60)
-    print(" 🏥 厚生労働省 医薬品供給データ 自動同期パイプライン")
+    print(" 🏥 厚生労働省 医薬品供給＆薬価データ 自動同期パイプライン")
     print("=" * 60)
     
     try:
-        excel_url, title = fetch_latest_excel_url()
-        download_excel(excel_url)
-        dataset = parse_excel_to_dataset(DOWNLOAD_EXCEL_PATH)
+        # 1. 薬価マスターの取得・更新
+        yakka_dict = fetch_latest_yakka_dictionary()
+
+        # 2. 供給状況Excelの取得
+        excel_url, title = fetch_latest_supply_excel_url()
+        download_supply_excel(excel_url)
+
+        # 3. 供給状況と薬価の結合解析
+        dataset = parse_excel_to_dataset(DOWNLOAD_SUPPLY_PATH, yakka_dict)
+
+        # 4. 差分検知＆履歴保存
         detect_diff_and_save(dataset)
+
+        # 5. data.js 出力
         export_data_js(dataset)
         print("\n✨ すべての工程が正常に完了しました！")
     except Exception as e:

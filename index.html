@@ -1403,6 +1403,80 @@
       white-space: nowrap;
     }
 
+    /* 薬価比較 & 代替アコーディオンのスタイル */
+    .sub-item-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .sub-price-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: #f1f5f9;
+      color: #334155;
+      border: 1px solid #cbd5e1;
+      white-space: nowrap;
+    }
+
+    .price-diff-badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 1px 5px;
+      border-radius: 3px;
+      white-space: nowrap;
+    }
+    .price-diff-cheaper {
+      background: #ecfdf5;
+      color: #047857;
+      border: 1px solid #a7f3d0;
+    }
+    .price-diff-same {
+      background: #f1f5f9;
+      color: #64748b;
+      border: 1px solid #e2e8f0;
+    }
+    .price-diff-higher {
+      background: #fef2f2;
+      color: #b91c1c;
+      border: 1px solid #fecaca;
+    }
+
+    /* テーブル表示時のインライン展開行（アコーディオン） */
+    .sub-detail-row td {
+      background: #f8fafc !important;
+      padding: 0 !important;
+      border-top: none !important;
+      border-bottom: 2px solid #cbd5e1 !important;
+    }
+
+    .sub-detail-container {
+      padding: 12px 16px;
+      border-left: 4px solid #3b82f6;
+      background: #ffffff;
+      margin: 4px 8px 8px 8px;
+      border-radius: 6px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+      animation: fadeIn 0.15s ease-out;
+    }
+
+    .tbl-sub-summary {
+      cursor: pointer;
+    }
+    .tbl-sub-summary:hover {
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .tbl-sub-summary.open {
+      outline: 2px solid #2563eb;
+      outline-offset: 1px;
+    }
+
     .empty-state {
       text-align: center;
       padding: 60px 20px;
@@ -1588,6 +1662,18 @@
       .quick-btn {
         padding: 3px 6px;
         font-size: 11px;
+      }
+      .sub-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+      }
+      .sub-item-right {
+        width: 100%;
+        justify-content: space-between;
+        margin-top: 4px;
+        padding-top: 4px;
+        border-top: 1px dashed #e2e8f0;
       }
     }
   </style>
@@ -2441,34 +2527,32 @@
       applyFilterAndSearch();
     }
 
-    function toggleSubstitutes(btn, ingredientName, currentYJ) {
-      const panel = btn.closest('.med-card').querySelector('.substitute-panel');
-      if (panel.classList.contains('open')) {
-        panel.classList.remove('open');
-        btn.innerHTML = '🔄 代替候補（同成分）を探す';
-        return;
-      }
-
+    // 代替候補リストおよび薬価比較HTMLを生成する共通ヘルパー
+    function renderSubstitutesContent(ingredientName, currentYJ) {
       const normIng = normalize(ingredientName);
       if (!normIng) {
-        panel.innerHTML = '<div style="font-size:12px; color:var(--text-muted);">成分情報がありません</div>';
-        panel.classList.add('open');
-        return;
+        return '<div style="font-size:12px; color:var(--text-muted); padding:8px;">成分情報がありません</div>';
       }
 
       const subs = [];
+      let currentItem = null;
       for (const row of MEDICINE_DATA) {
         if (normalize(row[1]) === normIng) {
           subs.push(row);
+          if (row[3] === currentYJ) {
+            currentItem = row;
+          }
         }
       }
 
       subs.sort((a, b) => a[7] - b[7]);
 
+      const basePrice = (currentItem && currentItem[14] !== null && currentItem[14] !== undefined) ? currentItem[14] : null;
+
       let html = `
         <div class="substitute-title">
-          <span>同成分「${escapeHtml(ingredientName)}」の他社流通状況（全 ${subs.length} 件）</span>
-          <span style="font-size:11px; font-weight:normal; color:var(--text-muted);">🟢通常品を優先表示</span>
+          <span>同成分「${escapeHtml(ingredientName)}」の他社流通・薬価比較（全 ${subs.length} 件）</span>
+          <span style="font-size:11px; font-weight:normal; color:var(--text-muted);">🟢通常品を優先表示 | 薬価差額表示</span>
         </div>
         <div class="substitute-list">
       `;
@@ -2495,25 +2579,91 @@
             subTagHTML = parts.map(t => `<span class="prod-class-badge tag-${t}" style="font-size:10px; padding:0 4px;">${t}</span>`).join(' ');
           }
 
+          const subPrice = (sub[14] !== null && sub[14] !== undefined) ? sub[14] : null;
+          let priceHTML = '';
+          if (subPrice !== null) {
+            let diffHTML = '';
+            if (basePrice !== null && !isCurrent) {
+              const diff = Math.round((subPrice - basePrice) * 100) / 100;
+              if (diff < -0.01) {
+                diffHTML = `<span class="price-diff-badge price-diff-cheaper" title="現在の品目より安価">${diff.toFixed(2)}円 お得✨</span>`;
+              } else if (diff > 0.01) {
+                diffHTML = `<span class="price-diff-badge price-diff-higher" title="現在の品目より高価">+${diff.toFixed(2)}円 差額有</span>`;
+              } else {
+                diffHTML = `<span class="price-diff-badge price-diff-same" title="現在の品目と同額">±0円 同額</span>`;
+              }
+            }
+            priceHTML = `
+              <div class="sub-price-pill" title="厚生労働省 薬価基準">
+                <span>薬価: <strong>${subPrice.toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 2})}円</strong></span>
+                ${diffHTML}
+              </div>
+            `;
+          }
+
           html += `
-            <div class="sub-item" style="${isCurrent ? 'border: 1px solid #94a3b8; background:#f1f5f9;' : ''}">
-              <div>
-                <span class="sub-name">
+            <div class="sub-item" style="${isCurrent ? 'border: 1.5px solid #64748b; background:#f8fafc;' : ''}">
+              <div style="flex:1; min-width:0; padding-right:8px;">
+                <div class="sub-name" style="word-break:break-word;">
                   ${subTagHTML ? `${subTagHTML} ` : ''}${escapeHtml(sub[0])}
-                </span>
-                ${isCurrent ? '<span style="font-size:10px; background:#475569; color:#fff; padding:1px 4px; border-radius:3px; margin-left:4px;">現在選択中</span>' : ''}
+                  ${isCurrent ? '<span style="font-size:10px; background:#475569; color:#fff; padding:1px 5px; border-radius:3px; margin-left:4px;">現在選択中</span>' : ''}
+                </div>
                 <div class="sub-maker">${escapeHtml(sub[2])} | YJ: ${escapeHtml(sub[3])} ${sub[10] ? `| 📦${escapeHtml(sub[10])}` : ''}</div>
               </div>
-              <span class="sub-badge ${badgeClass}">${badgeLabel}</span>
+              <div class="sub-item-right">
+                ${priceHTML}
+                <span class="sub-badge ${badgeClass}">${badgeLabel}</span>
+              </div>
             </div>
           `;
         }
       }
 
       html += `</div>`;
-      panel.innerHTML = html;
+      return html;
+    }
+
+    // カード版の代替候補トグル
+    function toggleSubstitutes(btn, ingredientName, currentYJ) {
+      const panel = btn.closest('.med-card').querySelector('.substitute-panel');
+      if (panel.classList.contains('open')) {
+        panel.classList.remove('open');
+        btn.innerHTML = '<span>🔄 代替候補（同成分）を探す</span>';
+        return;
+      }
+
+      panel.innerHTML = renderSubstitutesContent(ingredientName, currentYJ);
       panel.classList.add('open');
-      btn.innerHTML = '▲ 代替候補を閉じる';
+      btn.innerHTML = '<span>▲ 代替候補を閉じる</span>';
+    }
+
+    // テーブル版の代替候補アコーディオン展開トグル
+    function toggleTableSubstitutes(btn, ingredientName, currentYJ) {
+      const tr = btn.closest('tr');
+      const nextTr = tr.nextElementSibling;
+
+      // 既に展開中の行があれば閉じる
+      if (nextTr && nextTr.classList.contains('sub-detail-row')) {
+        nextTr.remove();
+        btn.classList.remove('open');
+        return;
+      }
+
+      // 他に開いているsub-detail-rowがあれば閉じる
+      document.querySelectorAll('.sub-detail-row').forEach(r => r.remove());
+      document.querySelectorAll('.tbl-sub-summary.open').forEach(b => b.classList.remove('open'));
+
+      btn.classList.add('open');
+      const subRow = document.createElement('tr');
+      subRow.className = 'sub-detail-row';
+      subRow.innerHTML = `
+        <td colspan="9">
+          <div class="sub-detail-container">
+            ${renderSubstitutesContent(ingredientName, currentYJ)}
+          </div>
+        </td>
+      `;
+      tr.parentNode.insertBefore(subRow, tr.nextSibling);
     }
 
     function createCardHTML(row) {
@@ -2713,11 +2863,11 @@
       let substituteBadgeHTML = '<span style="color:#cbd5e1;">-</span>';
       if (ingStat) {
         if (ingStat.total <= 1) {
-          substituteBadgeHTML = `<span class="tbl-sub-summary solo" onclick="quickSearch('${escapeHtml(ingredient)}', false)" title="同成分は自社品目のみ">単一品目</span>`;
+          substituteBadgeHTML = `<span class="tbl-sub-summary solo" onclick="toggleTableSubstitutes(this, '${escapeHtml(ingredient)}', '${escapeHtml(yj)}')" title="同成分は自社品目のみ（クリックで詳細確認）">単一品目</span>`;
         } else if (ingStat.normal > 0) {
-          substituteBadgeHTML = `<span class="tbl-sub-summary has-normal" onclick="quickSearch('${escapeHtml(ingredient)}', true)" title="同成分の他社品目に通常出荷があります（クリックで通常品を絞り込み表示）">🟢 通常 ${ingStat.normal}社</span>`;
+          substituteBadgeHTML = `<span class="tbl-sub-summary has-normal" onclick="toggleTableSubstitutes(this, '${escapeHtml(ingredient)}', '${escapeHtml(yj)}')" title="同成分の他社品目に通常出荷があります（クリックで代替薬・薬価差額を展開）">🟢 通常 ${ingStat.normal}社</span>`;
         } else {
-          substituteBadgeHTML = `<span class="tbl-sub-summary no-normal" onclick="quickSearch('${escapeHtml(ingredient)}', false)" title="同成分の他社品目もすべて限定出荷または供給停止です（市場逼迫）">⚠️ 全社停止・限定</span>`;
+          substituteBadgeHTML = `<span class="tbl-sub-summary no-normal" onclick="toggleTableSubstitutes(this, '${escapeHtml(ingredient)}', '${escapeHtml(yj)}')" title="同成分の他社品目もすべて限定出荷または供給停止です（クリックで他社状況・薬価差額を展開）">⚠️ 全社停止・限定</span>`;
         }
       }
 
