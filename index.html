@@ -318,17 +318,69 @@
       border-color: #fca5a5;
     }
 
+    /* 統計グリッド折りたたみトグル */
+    .summary-toggle-wrapper {
+      margin-top: 10px;
+      margin-bottom: 14px;
+    }
+
+    .summary-toggle-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #334155;
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 9999px;
+      cursor: pointer;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+      transition: all 0.15s ease;
+      font-family: inherit;
+    }
+
+    .summary-toggle-btn:hover {
+      background: #f1f5f9;
+      border-color: #94a3b8;
+      color: #0f172a;
+    }
+
+    .summary-toggle-icon {
+      font-size: 11px;
+      transition: transform 0.2s ease;
+      color: #64748b;
+    }
+
+    .summary-toggle-btn.open .summary-toggle-icon {
+      transform: rotate(180deg);
+    }
+
     /* 統計グリッド */
     .stats-grid {
-      display: grid;
+      display: none; /* 普段は隠れている */
       grid-template-columns: repeat(4, 1fr);
       gap: 12px;
-      margin-bottom: 24px;
+      margin-top: 12px;
+      margin-bottom: 18px;
+      animation: fadeIn 0.2s ease-out;
+    }
+
+    .stats-grid.open {
+      display: grid;
     }
 
     @media (max-width: 768px) {
       .stats-grid {
         grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+        margin-top: 10px;
+        margin-bottom: 14px;
+      }
+      .summary-toggle-btn {
+        font-size: 12px;
+        padding: 5px 12px;
       }
     }
 
@@ -1380,12 +1432,12 @@
         padding: 0 2px;
       }
       .header-title-row {
-        gap: 12px !important;
-        margin-bottom: 6px !important;
+        gap: 6px !important;
+        margin-bottom: 8px !important;
       }
       .header-title-row img {
-        width: 58px !important;
-        height: 58px !important;
+        width: 36px !important;
+        height: 36px !important;
       }
       #app-main-title {
         font-size: 22px !important;
@@ -1394,11 +1446,12 @@
       .view-tabs-container {
         padding: 3px;
         gap: 4px;
-        margin-bottom: 14px;
+        margin-bottom: 12px;
       }
       .tab-btn {
-        padding: 8px 10px;
+        padding: 8px 6px;
         font-size: 13px;
+        gap: 4px;
       }
       .med-card {
         padding: 12px 12px;
@@ -1455,16 +1508,50 @@
         font-size: 12px;
         margin-top: 4px;
       }
+      .search-panel {
+        padding: 14px 10px;
+        margin-bottom: 16px;
+      }
+      .search-input-wrapper {
+        margin-bottom: 12px;
+      }
       .search-input {
-        font-size: 14px;
-        padding: 11px 72px 11px 36px;
+        font-size: 16px; /* スマホでズームされない快適サイズ */
+        padding: 14px 75px 14px 44px;
+        height: 52px; /* 検索窓を大きくタップしやすく */
+        border-width: 1.5px;
+      }
+      .search-icon {
+        font-size: 18px;
+        left: 14px;
+      }
+      .filter-tags {
+        gap: 5px;
+      }
+      .filter-btn {
+        padding: 4px 8px;
+        font-size: 11.5px;
+      }
+      .date-select-wrapper {
+        font-size: 11.5px;
+        gap: 4px;
+      }
+      .date-select {
+        padding: 4px 24px 4px 8px;
+        font-size: 11.5px;
+      }
+      .reset-filters-btn {
+        padding: 4px 7px;
+        font-size: 11px;
       }
       .quick-searches {
         gap: 4px;
+        margin-top: 10px;
+        padding-top: 10px;
       }
       .quick-btn {
-        padding: 3px 7px;
-        font-size: 11.5px;
+        padding: 3px 6px;
+        font-size: 11px;
       }
     }
   </style>
@@ -1477,9 +1564,12 @@
         <span class="pulse-dot"></span>
         厚労省 最新公表: <span id="mhlw-update-date">2026年10月2日</span>（<span id="header-data-count">16,405</span>品目連動）
       </div>
-      <div class="header-title-row" style="display:flex; align-items:center; gap:18px; margin-bottom:10px; flex-wrap:wrap;">
-        <img src="komechan.png" alt="コメちゃん" style="width:76px; height:76px; border-radius:50%; object-fit:cover; border:3px solid #fed7aa; box-shadow:0 4px 14px rgba(249,115,22,0.22); flex-shrink:0; background:#fff;">
-        <h1 id="app-main-title" style="margin:0; font-size:40px; font-weight:900; letter-spacing:-0.03em; line-height:1.15; color:#0f172a; text-shadow:0 1px 2px rgba(0,0,0,0.04);">医薬品供給状況ちゃんねる　コメちゃん</h1>
+      <div class="header-title-row" style="display:flex; flex-direction:column; align-items:flex-start; gap:4px; margin-bottom:12px;">
+        <h1 id="app-main-title" style="margin:0; font-size:36px; font-weight:900; letter-spacing:-0.03em; line-height:1.2; color:#0f172a; text-shadow:0 1px 2px rgba(0,0,0,0.04);">医薬品供給状況ちゃんねる</h1>
+        <div style="display:inline-flex; align-items:center; gap:10px;">
+          <span style="font-size:32px; font-weight:900; color:#ea580c; letter-spacing:-0.02em;">コメちゃん</span>
+          <img src="komechan.png" alt="コメちゃん" style="width:48px; height:48px; border-radius:50%; object-fit:cover; border:2.5px solid #fed7aa; box-shadow:0 3px 10px rgba(249,115,22,0.25); background:#fff;">
+        </div>
       </div>
       <p class="subtitle" style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
         <a href="https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/kenkou_iryou/iryou/kouhatu-iyaku/04_00003.html" target="_blank" rel="noopener noreferrer" style="color:var(--text-muted); text-decoration:underline; text-underline-offset:3px; transition:color 0.15s ease;" onmouseover="this.style.color='#2563eb'" onmouseout="this.style.color='var(--text-muted)'" title="厚生労働省の公式ページ（出典元）を新しいタブで開く">
@@ -1487,6 +1577,38 @@
         </a>
         <span style="font-size:12px; color:var(--text-subtle);">| 最終更新: 2026年10月2日公表版</span>
       </p>
+
+      <!-- 供給状況全体内訳（折りたたみトグル） -->
+      <div class="summary-toggle-wrapper">
+        <button type="button" class="summary-toggle-btn" id="summary-toggle-btn" onclick="toggleGlobalStats()">
+          <span>📊 供給状況の全体内訳を見る</span>
+          <span class="summary-toggle-icon" id="summary-toggle-icon">▼</span>
+        </button>
+
+        <!-- 全体統計パネル（初期状態は非表示） -->
+        <div class="stats-grid" id="global-stats-grid">
+          <div class="stat-card">
+            <div class="stat-label">データベース総品目</div>
+            <div class="stat-value" id="stat-total">-</div>
+            <div class="stat-sub">厚労省公表ベース</div>
+          </div>
+          <div class="stat-card success">
+            <div class="stat-label">通常出荷</div>
+            <div class="stat-value" id="stat-normal">-</div>
+            <div class="stat-sub" id="stat-normal-rate">-%</div>
+          </div>
+          <div class="stat-card warning">
+            <div class="stat-label">限定出荷</div>
+            <div class="stat-value" id="stat-limited">-</div>
+            <div class="stat-sub" id="stat-limited-rate">-%</div>
+          </div>
+          <div class="stat-card danger">
+            <div class="stat-label">供給停止</div>
+            <div class="stat-value" id="stat-stopped">-</div>
+            <div class="stat-sub" id="stat-stopped-rate">-%</div>
+          </div>
+        </div>
+      </div>
     </header>
 
     <!-- 目立つモード切り替えタブ -->
@@ -1496,9 +1618,9 @@
         <span class="tab-badge-normal">1.6万件</span>
       </button>
       <button class="tab-btn" id="tab-watchlist" onclick="switchTab('watchlist')">
-        <span>🏥 自薬局 採用薬監視</span>
+        <span>🏥 採用薬監視</span>
         <span id="tab-watch-badge-container">
-          <span class="unregistered-badge">● 未登録（ここをクリック）</span>
+          <span class="unregistered-badge">● 未登録</span>
         </span>
       </button>
     </div>
@@ -1572,30 +1694,6 @@
             <div class="stat-sub" id="watch-stat-stopped-rate">0%</div>
           </div>
         </div>
-      </div>
-    </div>
-
-    <!-- 全体統計パネル（全品目検索時のみ表示） -->
-    <div class="stats-grid" id="global-stats-grid">
-      <div class="stat-card">
-        <div class="stat-label">データベース総品目</div>
-        <div class="stat-value" id="stat-total">-</div>
-        <div class="stat-sub">厚労省公表ベース</div>
-      </div>
-      <div class="stat-card success">
-        <div class="stat-label">通常出荷</div>
-        <div class="stat-value" id="stat-normal">-</div>
-        <div class="stat-sub" id="stat-normal-rate">-%</div>
-      </div>
-      <div class="stat-card warning">
-        <div class="stat-label">限定出荷</div>
-        <div class="stat-value" id="stat-limited">-</div>
-        <div class="stat-sub" id="stat-limited-rate">-%</div>
-      </div>
-      <div class="stat-card danger">
-        <div class="stat-label">供給停止</div>
-        <div class="stat-value" id="stat-stopped">-</div>
-        <div class="stat-sub" id="stat-stopped-rate">-%</div>
       </div>
     </div>
 
@@ -1852,12 +1950,24 @@
         setFilterButton('all');
       } else {
         uploadSec.style.display = 'none';
-        globalStats.style.display = 'grid';
         quickBox.style.display = 'flex';
         setFilterButton('all');
       }
 
       applyFilterAndSearch();
+    }
+
+    // 全体統計パネルの開閉トグル
+    let isGlobalStatsOpen = false;
+    function toggleGlobalStats() {
+      isGlobalStatsOpen = !isGlobalStatsOpen;
+      const statsGrid = document.getElementById('global-stats-grid');
+      const toggleBtn = document.getElementById('summary-toggle-btn');
+      const toggleIcon = document.getElementById('summary-toggle-icon');
+
+      if (statsGrid) statsGrid.classList.toggle('open', isGlobalStatsOpen);
+      if (toggleBtn) toggleBtn.classList.toggle('open', isGlobalStatsOpen);
+      if (toggleIcon) toggleIcon.textContent = isGlobalStatsOpen ? '▲' : '▼';
     }
 
     function toggleUploadBox() {
@@ -2164,7 +2274,7 @@
 
       document.getElementById('watchlist-summary').style.display = 'none';
       document.getElementById('drop-zone').style.display = 'block';
-      document.getElementById('tab-watch-badge-container').innerHTML = `<span class="unregistered-badge">● 未登録（ここをクリック）</span>`;
+      document.getElementById('tab-watch-badge-container').innerHTML = `<span class="unregistered-badge">● 未登録</span>`;
       document.getElementById('file-input').value = '';
       applyFilterAndSearch();
     }
@@ -2797,7 +2907,6 @@
         document.getElementById('tab-all').classList.add('active');
         document.getElementById('tab-watchlist').classList.remove('active');
         document.getElementById('upload-section').style.display = 'none';
-        document.getElementById('global-stats-grid').style.display = 'grid';
         document.getElementById('quick-search-box').style.display = 'flex';
       }
 
