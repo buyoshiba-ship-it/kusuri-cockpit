@@ -1467,13 +1467,36 @@
 
     .tbl-sub-summary {
       cursor: pointer;
+      transition: all 0.15s ease;
     }
     .tbl-sub-summary:hover {
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+      transform: translateY(-0.5px);
     }
     .tbl-sub-summary.open {
-      outline: 2px solid #2563eb;
-      outline-offset: 1px;
+      background: #0f172a !important;
+      color: #ffffff !important;
+      border-color: #0f172a !important;
+      box-shadow: 0 2px 5px rgba(15, 23, 42, 0.25) !important;
+    }
+
+    .accordion-close-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #ffffff;
+      background: #0f172a;
+      border: 1px solid #0f172a;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.12s ease;
+    }
+    .accordion-close-btn:hover {
+      background: #334155;
+      border-color: #334155;
     }
 
     .empty-state {
@@ -2537,7 +2560,7 @@
     }
 
     // 代替候補リストおよび薬価比較HTMLを生成する共通ヘルパー
-    function renderSubstitutesContent(ingredientName, currentYJ) {
+    function renderSubstitutesContent(ingredientName, currentYJ, isTableMode = false) {
       const normIng = normalize(ingredientName);
       if (!normIng) {
         return '<div style="font-size:12px; color:var(--text-muted); padding:8px;">成分情報がありません</div>';
@@ -2566,7 +2589,10 @@
       let html = `
         <div class="substitute-title">
           <span>同成分「${escapeHtml(ingredientName)}」の他社流通・薬価比較（全 ${subs.length} 件）</span>
-          <span style="font-size:11px; font-weight:normal; color:var(--text-muted);">🟢通常品を優先表示 | 薬価差額表示</span>
+          <div style="display:flex; align-items:center; gap:10px;">
+            <span style="font-size:11px; font-weight:normal; color:var(--text-muted);">🟢通常品を優先表示 | 薬価差額表示</span>
+            ${isTableMode ? `<button type="button" class="accordion-close-btn" onclick="closeTableSubstitutes(this)">▲ 閉じる</button>` : ''}
+          </div>
         </div>
         <div class="substitute-list">
       `;
@@ -2648,9 +2674,27 @@
         return;
       }
 
-      panel.innerHTML = renderSubstitutesContent(ingredientName, currentYJ);
+      panel.innerHTML = renderSubstitutesContent(ingredientName, currentYJ, false);
       panel.classList.add('open');
       btn.innerHTML = '<span>▲ 代替候補を閉じる</span>';
+    }
+
+    // テーブル版の展開解除（アコーディオン内ボタン用）
+    function closeTableSubstitutes(innerBtn) {
+      const subRow = innerBtn.closest('.sub-detail-row');
+      if (subRow) {
+        const prevTr = subRow.previousElementSibling;
+        if (prevTr) {
+          const btn = prevTr.querySelector('.tbl-sub-summary');
+          if (btn) {
+            btn.classList.remove('open');
+            if (btn.dataset.origHtml) {
+              btn.innerHTML = btn.dataset.origHtml;
+            }
+          }
+        }
+        subRow.remove();
+      }
     }
 
     // テーブル版の代替候補アコーディオン展開トグル
@@ -2658,24 +2702,41 @@
       const tr = btn.closest('tr');
       const nextTr = tr.nextElementSibling;
 
-      // 既に展開中の行があれば閉じる
+      // 既に展開中の行があれば閉じる（元の表示に戻す）
       if (nextTr && nextTr.classList.contains('sub-detail-row')) {
         nextTr.remove();
         btn.classList.remove('open');
+        if (btn.dataset.origHtml) {
+          btn.innerHTML = btn.dataset.origHtml;
+        }
         return;
       }
 
       // 他に開いているsub-detail-rowがあれば閉じる
-      document.querySelectorAll('.sub-detail-row').forEach(r => r.remove());
+      document.querySelectorAll('.sub-detail-row').forEach(r => {
+        const p = r.previousElementSibling;
+        if (p) {
+          const b = p.querySelector('.tbl-sub-summary');
+          if (b && b.dataset.origHtml) b.innerHTML = b.dataset.origHtml;
+        }
+        r.remove();
+      });
       document.querySelectorAll('.tbl-sub-summary.open').forEach(b => b.classList.remove('open'));
 
+      // 元のテキストを退避
+      if (!btn.dataset.origHtml) {
+        btn.dataset.origHtml = btn.innerHTML;
+      }
+
       btn.classList.add('open');
+      btn.innerHTML = '▲ 閉じる';
+
       const subRow = document.createElement('tr');
       subRow.className = 'sub-detail-row';
       subRow.innerHTML = `
         <td colspan="9">
           <div class="sub-detail-container">
-            ${renderSubstitutesContent(ingredientName, currentYJ)}
+            ${renderSubstitutesContent(ingredientName, currentYJ, true)}
           </div>
         </td>
       `;
