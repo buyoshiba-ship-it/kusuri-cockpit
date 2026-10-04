@@ -834,17 +834,17 @@
     }
 
     .med-table tr.tbl-status-1 td {
-      background: #fefef2;
+      background: #fef9c3; /* 限定出荷: はっきりした淡黄色 */
     }
     .med-table tr.tbl-status-1:hover td {
-      background: #fef9c3;
+      background: #fef08a;
     }
 
     .med-table tr.tbl-status-2 td {
-      background: #fff5f5;
+      background: #fee2e2; /* 供給停止: はっきりした淡赤色 */
     }
     .med-table tr.tbl-status-2:hover td {
-      background: #fee2e2;
+      background: #fecaca;
     }
 
     .tbl-med-name {
@@ -962,13 +962,13 @@
     }
 
     .med-card.status-1 {
-      background: #fefce8;
+      background: #fef08a; /* 限定出荷: はっきり認識できる濃い黄色 */
       border: 1px solid var(--warning-border);
       border-left: 4px solid var(--warning-card-border);
     }
 
     .med-card.status-2 {
-      background: #fff1f2;
+      background: #fee2e2; /* 供給停止: はっきり認識できる濃い赤色 */
       border: 1px solid var(--danger-border);
       border-left: 4px solid var(--danger-card-border);
     }
@@ -1347,35 +1347,51 @@
       background: #f1f5f9;
     }
 
+    /* 現在選択中の薬（最上位バー）：通常・限定・停止のステータスに応じたボーダー＆背景色 */
     .sub-item.current-item {
       border: 2px solid #2563eb !important;
       background: #eff6ff !important;
-      box-shadow: 0 1px 4px rgba(37, 99, 235, 0.12);
+      box-shadow: 0 1px 4px rgba(37, 99, 235, 0.15);
+    }
+    .sub-item.current-item.current-item-0 {
+      border: 2px solid #2563eb !important;
+      background: #e0f2fe !important; /* 通常出荷: はっきりした爽やかな青 */
+      box-shadow: 0 1px 4px rgba(37, 99, 235, 0.15);
+    }
+    .sub-item.current-item.current-item-1 {
+      border: 2.5px solid #d97706 !important; /* 限定出荷: はっきりした濃い黄/オレンジ枠 */
+      background: #fef08a !important; /* 限定出荷: しっかり視認できる濃い黄色 */
+      box-shadow: 0 1px 4px rgba(217, 119, 6, 0.2);
+    }
+    .sub-item.current-item.current-item-2 {
+      border: 2.5px solid #dc2626 !important; /* 供給停止: はっきりした濃い赤枠 */
+      background: #fee2e2 !important; /* 供給停止: しっかり視認できる濃い赤色 */
+      box-shadow: 0 1px 4px rgba(220, 38, 38, 0.2);
     }
 
-    /* 同一規格・剤形（ズバリ代替候補）のステータス別背景色 */
+    /* 同一規格・剤形（ズバリ代替候補）のステータス別背景色（全体的に色を濃く強化） */
     .sub-item.same-spec-0 {
-      border: 1.5px solid #93c5fd !important;
-      background: #f0f7ff !important; /* 通常出荷: 清潔な淡いブルー */
+      border: 1.5px solid #60a5fa !important;
+      background: #e0f2fe !important; /* 通常出荷: はっきりした淡いブルー */
     }
     .sub-item.same-spec-0:hover {
-      background: #e0f0fe !important;
+      background: #bae6fd !important;
     }
 
     .sub-item.same-spec-1 {
-      border: 1.5px solid #fde047 !important;
-      background: #fefce8 !important; /* 限定出荷: 注意を促す淡い黄色 */
+      border: 1.5px solid #eab308 !important;
+      background: #fef08a !important; /* 限定出荷: 従来より濃い警告黄色 */
     }
     .sub-item.same-spec-1:hover {
-      background: #fef9c3 !important;
+      background: #fde047 !important;
     }
 
     .sub-item.same-spec-2 {
-      border: 1.5px solid #fca5a5 !important;
-      background: #fef2f2 !important; /* 供給停止: 警戒の淡い赤色 */
+      border: 1.5px solid #f87171 !important;
+      background: #fee2e2 !important; /* 供給停止: 従来より濃い警戒赤色 */
     }
     .sub-item.same-spec-2:hover {
-      background: #fee2e2 !important;
+      background: #fecaca !important;
     }
 
     .sub-group-heading {
@@ -2698,12 +2714,16 @@
         }
 
         // 背景クラスの判定：
-        // 現在の薬 ➔ current-item
+        // 現在の薬 ➔ current-item + current-item-${sub[7]}（通常:青, 限定:黄, 停止:赤）
         // 同一規格の代替候補 ➔ same-spec-0 (通常・青系), same-spec-1 (限定・黄系), same-spec-2 (停止・赤系)
         // 別規格 ➔ 通常の背景（スタイルのまま）
         let itemClass = 'sub-item';
+        let currentBadgeColor = '#2563eb';
+        if (sub[7] === 1) currentBadgeColor = '#d97706';
+        else if (sub[7] === 2) currentBadgeColor = '#dc2626';
+
         if (isCurrent) {
-          itemClass += ' current-item';
+          itemClass += ` current-item current-item-${sub[7]}`;
         } else if (isSameSpec) {
           itemClass += ` same-spec-${sub[7]}`;
         }
@@ -2713,7 +2733,7 @@
             <div style="flex:1; min-width:0; padding-right:8px;">
               <div class="sub-name" style="word-break:break-word;">
                 ${subTagHTML ? `${subTagHTML} ` : ''}${escapeHtml(sub[0])}
-                ${isCurrent ? '<span style="font-size:10px; background:#2563eb; color:#fff; font-weight:700; padding:2px 6px; border-radius:4px; margin-left:6px; display:inline-block;">★ 現在の薬</span>' : ''}
+                ${isCurrent ? `<span style="font-size:10px; background:${currentBadgeColor}; color:#fff; font-weight:700; padding:2px 6px; border-radius:4px; margin-left:6px; display:inline-block;">★ 現在の薬</span>` : ''}
                 ${(!isCurrent && isSameSpec) ? '<span style="font-size:10px; background:#e0e7ff; color:#3730a3; font-weight:700; padding:1px 5px; border-radius:3px; margin-left:4px; border:1px solid #c7d2fe;">同規格・同剤形</span>' : ''}
               </div>
               <div class="sub-maker">${escapeHtml(sub[2])} | YJ: ${escapeHtml(sub[3])} ${sub[10] ? `| 📦${escapeHtml(sub[10])}` : ''}</div>
