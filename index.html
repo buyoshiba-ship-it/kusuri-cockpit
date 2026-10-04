@@ -1455,6 +1455,12 @@
       border: 1px solid #cbd5e1;
       white-space: nowrap;
     }
+    .sub-price-unlisted {
+      background: #f8fafc;
+      color: #64748b;
+      border: 1px dashed #cbd5e1;
+      font-weight: 500;
+    }
 
     .price-diff-badge {
       font-size: 10px;
@@ -2709,6 +2715,12 @@
             <div class="sub-price-pill" title="厚生労働省 薬価基準">
               <span>薬価: <strong>${subPrice.toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 2})}円</strong></span>
               ${diffHTML}
+            </div>
+          `;
+        } else {
+          priceHTML = `
+            <div class="sub-price-pill sub-price-unlisted" title="薬価基準未収載品（自由診療・自費等）のため公的薬価がありません">
+              <span>薬価: <strong>未収載(自費)</strong></span>
             </div>
           `;
         }
