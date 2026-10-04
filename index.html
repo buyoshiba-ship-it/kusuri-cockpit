@@ -266,22 +266,22 @@
     /* 採用薬アラート概要 */
     .watchlist-summary {
       display: none;
-      margin-bottom: 16px;
+      margin-bottom: 12px;
     }
 
     .summary-header {
       display: flex;
       align-items: center;
       flex-wrap: wrap;
-      gap: 8px;
+      gap: 6px;
     }
 
     .summary-title-btn {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      padding: 6px 14px;
-      font-size: 13px;
+      gap: 4px;
+      padding: 5px 11px;
+      font-size: 12px;
       font-weight: 600;
       color: #334155;
       background: #ffffff;
@@ -291,6 +291,7 @@
       box-shadow: 0 1px 2px rgba(0,0,0,0.04);
       transition: all 0.15s ease;
       font-family: inherit;
+      white-space: nowrap;
     }
 
     .summary-title-btn:hover {
@@ -301,7 +302,7 @@
 
     .summary-title-icon {
       display: inline-block;
-      font-size: 11px;
+      font-size: 10px;
       color: #64748b;
       transition: transform 0.2s ease;
     }
@@ -311,9 +312,9 @@
     }
 
     .clear-btn {
-      font-size: 12px;
+      font-size: 11.5px;
       font-weight: 700;
-      padding: 5px 12px;
+      padding: 4.5px 10px;
       background: #fef2f2;
       border: 1px solid #fca5a5;
       border-radius: 9999px;
@@ -321,10 +322,11 @@
       cursor: pointer;
       display: inline-flex;
       align-items: center;
-      gap: 4px;
+      gap: 3px;
       box-shadow: 0 1px 2px rgba(220, 38, 38, 0.08);
       transition: all 0.15s ease;
       font-family: inherit;
+      white-space: nowrap;
     }
 
     .clear-btn:hover {
@@ -338,8 +340,8 @@
       display: none; /* 折りたたみ（初期状態は隠す） */
       grid-template-columns: repeat(5, 1fr);
       gap: 12px;
-      margin-top: 12px;
-      padding-top: 12px;
+      margin-top: 10px;
+      padding-top: 10px;
       animation: fadeIn 0.2s ease-out;
     }
 
@@ -349,16 +351,16 @@
 
     /* 統計グリッド折りたたみトグル */
     .summary-toggle-wrapper {
-      margin-top: 10px;
-      margin-bottom: 14px;
+      margin-top: 8px;
+      margin-bottom: 12px;
     }
 
     .summary-toggle-btn {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      padding: 6px 14px;
-      font-size: 13px;
+      gap: 4px;
+      padding: 5px 11px;
+      font-size: 12px;
       font-weight: 600;
       color: #334155;
       background: #ffffff;
@@ -368,6 +370,7 @@
       box-shadow: 0 1px 2px rgba(0,0,0,0.04);
       transition: all 0.15s ease;
       font-family: inherit;
+      white-space: nowrap;
     }
 
     .summary-toggle-btn:hover {
@@ -1730,12 +1733,22 @@
         <span style="font-size:12px; color:var(--text-subtle);">| 最終更新: 2026年10月2日公表版</span>
       </p>
 
-      <!-- 供給状況全体内訳（折りたたみトグル） -->
+      <!-- 供給状況全体内訳（折りたたみトグル & 採用薬監視コントロール） -->
       <div class="summary-toggle-wrapper">
-        <button type="button" class="summary-toggle-btn" id="summary-toggle-btn" onclick="toggleGlobalStats()">
-          <span>📊 供給状況の全体内訳を見る</span>
-          <span class="summary-toggle-icon" id="summary-toggle-icon">▼</span>
-        </button>
+        <div class="summary-header">
+          <button type="button" class="summary-toggle-btn" id="summary-toggle-btn" onclick="toggleGlobalStats()">
+            <span id="summary-toggle-text">📊 供給状況の全体内訳を見る</span>
+            <span class="summary-toggle-icon" id="summary-toggle-icon">▼</span>
+          </button>
+          <div id="watchlist-controls-inline" style="display: none; align-items: center; gap: 6px;">
+            <button type="button" class="summary-title-btn" id="watch-summary-toggle-btn" onclick="toggleWatchlistStats()">
+              <span>🏥 採用登録薬</span>
+              <span class="summary-title-icon" id="watch-summary-toggle-icon">▼</span>
+            </button>
+            <button class="clear-btn" onclick="clearWatchlist()" title="登録した採用薬リストを解除します">✕ 登録解除</button>
+          </div>
+          <span id="watch-file-name" style="display: none; font-size: 11px; font-weight: normal; color: var(--text-muted); width: 100%; margin-top: 2px;"></span>
+        </div>
 
         <!-- 全体統計パネル（初期状態は非表示） -->
         <div class="stats-grid" id="global-stats-grid">
@@ -1803,19 +1816,8 @@
         </div>
       </div>
 
-      <!-- 採用薬アラート概要（折りたたみ可能） -->
+      <!-- 採用薬集計グリッド（折りたたみ可能） -->
       <div id="watchlist-summary" class="watchlist-summary">
-        <div class="summary-header">
-          <button type="button" class="summary-title-btn" id="watch-summary-toggle-btn" onclick="toggleWatchlistStats()">
-            <span>🏥 登録採用結果</span>
-            <span class="summary-title-icon" id="watch-summary-toggle-icon">▼</span>
-          </button>
-          <div class="summary-actions">
-            <button class="clear-btn" onclick="clearWatchlist()" title="登録した採用薬リストを解除します">✕ 登録解除</button>
-          </div>
-          <span id="watch-file-name" style="font-size:11.5px; font-weight:normal; color:var(--text-muted); width:100%; margin-top:2px;"></span>
-        </div>
-
         <div class="watchlist-stats-grid">
           <div class="stat-card">
             <div class="stat-label">登録採用薬</div>
@@ -2080,6 +2082,9 @@
       const uploadSec = document.getElementById('upload-section');
       const globalStats = document.getElementById('global-stats-grid');
       const dropZone = document.getElementById('drop-zone');
+      const inlineWatchControls = document.getElementById('watchlist-controls-inline');
+      const summaryText = document.getElementById('summary-toggle-text');
+      const fileNameEl = document.getElementById('watch-file-name');
 
       if (mode === 'watchlist') {
         uploadSec.style.display = 'block';
@@ -2087,14 +2092,23 @@
 
         if (myAdoptionList.length > 0) {
           dropZone.style.display = 'none';
+          if (inlineWatchControls) inlineWatchControls.style.display = 'inline-flex';
+          if (summaryText) summaryText.textContent = '📊 供給全体';
+          if (fileNameEl && fileNameEl.textContent) fileNameEl.style.display = 'block';
         } else {
           dropZone.style.display = 'block';
+          if (inlineWatchControls) inlineWatchControls.style.display = 'none';
+          if (summaryText) summaryText.textContent = '📊 供給状況の全体内訳を見る';
+          if (fileNameEl) fileNameEl.style.display = 'none';
         }
 
         // 採用薬タブに切り替えた際はまず全採用薬（'all'）を見やすく表示
         setFilterButton('all');
       } else {
         uploadSec.style.display = 'none';
+        if (inlineWatchControls) inlineWatchControls.style.display = 'none';
+        if (summaryText) summaryText.textContent = '📊 供給状況の全体内訳を見る';
+        if (fileNameEl) fileNameEl.style.display = 'none';
         setFilterButton('all');
       }
 
@@ -2393,10 +2407,17 @@
       const summaryBox = document.getElementById('watchlist-summary');
       const badgeContainer = document.getElementById('tab-watch-badge-container');
       const fileNameEl = document.getElementById('watch-file-name');
+      const inlineWatchControls = document.getElementById('watchlist-controls-inline');
+      const summaryText = document.getElementById('summary-toggle-text');
 
       summaryBox.style.display = 'block';
       badgeContainer.innerHTML = `<span class="registered-badge">登録済</span>`;
       fileNameEl.textContent = `（ファイル: ${fileName} / 照合成功: ${matchedCount}品目${notFoundCount > 0 ? `、未該当: ${notFoundCount}件` : ''}）`;
+      if (currentMode === 'watchlist') {
+        if (inlineWatchControls) inlineWatchControls.style.display = 'inline-flex';
+        if (summaryText) summaryText.textContent = '📊 供給全体';
+        if (fileNameEl) fileNameEl.style.display = 'block';
+      }
 
       // 初期状態では集計パネルを閉じた状態（コンパクト表示）にする
       const statsGrid = document.querySelector('.watchlist-stats-grid');
@@ -2443,6 +2464,17 @@
       document.getElementById('drop-zone').style.display = 'block';
       document.getElementById('tab-watch-badge-container').innerHTML = `<span class="unregistered-badge">未登録</span>`;
       document.getElementById('file-input').value = '';
+
+      const inlineWatchControls = document.getElementById('watchlist-controls-inline');
+      const summaryText = document.getElementById('summary-toggle-text');
+      const fileNameEl = document.getElementById('watch-file-name');
+      if (inlineWatchControls) inlineWatchControls.style.display = 'none';
+      if (summaryText) summaryText.textContent = '📊 供給状況の全体内訳を見る';
+      if (fileNameEl) {
+        fileNameEl.textContent = '';
+        fileNameEl.style.display = 'none';
+      }
+
       applyFilterAndSearch();
     }
 
