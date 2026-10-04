@@ -696,39 +696,6 @@
       box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.08);
     }
 
-    .quick-searches {
-      margin-top: 14px;
-      padding-top: 12px;
-      border-top: 1px dashed var(--border-subtle);
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      align-items: center;
-    }
-
-    .quick-label {
-      font-size: 12px;
-      color: var(--text-subtle);
-      margin-right: 4px;
-    }
-
-    .quick-btn {
-      padding: 3px 8px;
-      font-size: 12px;
-      background: transparent;
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      color: var(--text-muted);
-      cursor: pointer;
-      transition: all 0.1s;
-    }
-
-    .quick-btn:hover {
-      border-color: var(--primary);
-      color: var(--text);
-      background: #f1f5f9;
-    }
-
     /* リザルト & 表示モード切替 */
     .results-header {
       display: flex;
@@ -1726,15 +1693,6 @@
         padding: 4px 7px;
         font-size: 11px;
       }
-      .quick-searches {
-        gap: 4px;
-        margin-top: 10px;
-        padding-top: 10px;
-      }
-      .quick-btn {
-        padding: 3px 6px;
-        font-size: 11px;
-      }
       .sub-item {
         flex-direction: column;
         align-items: flex-start;
@@ -1912,7 +1870,7 @@
 
       <div class="filter-tags">
         <button class="filter-btn active" data-filter="all">すべて</button>
-        <button class="filter-btn" data-filter="new" style="color:#2563eb; border-color:#93c5fd; background:#eff6ff;">🆕 今回新着（36件）</button>
+        <button class="filter-btn" id="filter-btn-new" data-filter="new" style="color:#2563eb; border-color:#93c5fd; background:#eff6ff;">🆕 今回新着（-件）</button>
         <button class="filter-btn filter-btn-improved" data-filter="improved">✨ 改善（回復）のみ</button>
         <button class="filter-btn" data-filter="alert">⚠️ 要警戒のみ（限定・停止）</button>
         <button class="filter-btn" data-filter="limited">限定出荷のみ</button>
@@ -1934,16 +1892,6 @@
         <button class="reset-filters-btn" id="reset-all-filters-btn" onclick="resetAllFilters()" title="検索キーワードと絞り込み条件を初期状態に戻す">
           <span>✕ 条件クリア</span>
         </button>
-      </div>
-
-      <div class="quick-searches" id="quick-search-box">
-        <span class="quick-label">クイック検索:</span>
-        <button class="quick-btn" onclick="quickSearch('アシクロビル')">アシクロビル</button>
-        <button class="quick-btn" onclick="quickSearch('トラネキサム酸')">トラネキサム酸</button>
-        <button class="quick-btn" onclick="quickSearch('カロナール')">カロナール</button>
-        <button class="quick-btn" onclick="quickSearch('アモキシシリン')">アモキシシリン</button>
-        <button class="quick-btn" onclick="quickSearch('セファクロル')">セファクロル</button>
-        <button class="quick-btn" onclick="quickSearch('東和薬品')">東和薬品</button>
       </div>
     </div>
 
@@ -2044,7 +1992,7 @@
       if (typeof MEDICINE_DATA === 'undefined') return;
 
       const total = MEDICINE_DATA.length;
-      let normal = 0, limited = 0, stopped = 0;
+      let normal = 0, limited = 0, stopped = 0, newCount = 0;
       ingredientStatsMap.clear();
 
       for (let i = 0; i < total; i++) {
@@ -2053,6 +2001,8 @@
         if (type === 0) normal++;
         else if (type === 1) limited++;
         else if (type === 2) stopped++;
+
+        if (r[13] === 1) newCount++;
 
         const ing = normalize(r[1]);
         if (ing) {
@@ -2071,6 +2021,11 @@
         headerCountEl.textContent = total.toLocaleString();
       }
 
+      const newFilterBtn = document.getElementById('filter-btn-new');
+      if (newFilterBtn) {
+        newFilterBtn.textContent = `🆕 今回新着（${newCount.toLocaleString()}件）`;
+      }
+
       document.getElementById('stat-total').textContent = total.toLocaleString();
       document.getElementById('stat-normal').textContent = normal.toLocaleString();
       document.getElementById('stat-limited').textContent = limited.toLocaleString();
@@ -2084,6 +2039,7 @@
     function normalize(str) {
       return (str || '')
         .normalize('NFKC')
+        .replace(/[\u3041-\u3096]/g, match => String.fromCharCode(match.charCodeAt(0) + 0x60))
         .toLowerCase()
         .trim();
     }
@@ -2123,13 +2079,11 @@
 
       const uploadSec = document.getElementById('upload-section');
       const globalStats = document.getElementById('global-stats-grid');
-      const quickBox = document.getElementById('quick-search-box');
       const dropZone = document.getElementById('drop-zone');
 
       if (mode === 'watchlist') {
         uploadSec.style.display = 'block';
         globalStats.style.display = 'none';
-        quickBox.style.display = 'none';
 
         if (myAdoptionList.length > 0) {
           dropZone.style.display = 'none';
@@ -2141,7 +2095,6 @@
         setFilterButton('all');
       } else {
         uploadSec.style.display = 'none';
-        quickBox.style.display = 'flex';
         setFilterButton('all');
       }
 
