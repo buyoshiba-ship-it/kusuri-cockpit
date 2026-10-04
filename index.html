@@ -1870,7 +1870,7 @@
 
       <div class="filter-tags">
         <button class="filter-btn active" data-filter="all">すべて</button>
-        <button class="filter-btn" id="filter-btn-new" data-filter="new" style="color:#2563eb; border-color:#93c5fd; background:#eff6ff;">🆕 今回新着（-件）</button>
+        <button class="filter-btn" id="filter-btn-new" data-filter="new" style="color:#2563eb; border-color:#93c5fd; background:#eff6ff;">🆕 新着</button>
         <button class="filter-btn filter-btn-improved" data-filter="improved">✨ 改善（回復）のみ</button>
         <button class="filter-btn" data-filter="alert">⚠️ 要警戒のみ（限定・停止）</button>
         <button class="filter-btn" data-filter="limited">限定出荷のみ</button>
@@ -2023,7 +2023,7 @@
 
       const newFilterBtn = document.getElementById('filter-btn-new');
       if (newFilterBtn) {
-        newFilterBtn.textContent = `🆕 今回新着（${newCount.toLocaleString()}件）`;
+        newFilterBtn.textContent = '🆕 新着';
       }
 
       document.getElementById('stat-total').textContent = total.toLocaleString();
