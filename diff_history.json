@@ -1,6 +1,161 @@
 {
-  "improved": [],
-  "worsened": [],
-  "new_stopped": [],
-  "total_new_items": 0
+  "improved": [
+    {
+      "yj": "6250019F1080",
+      "name": "バラシクロビル錠５００ｍｇ「ＦＦＰ」",
+      "maker": "共創未来ファーマ",
+      "from_status": "②限定出荷（自社の事情）",
+      "to_status": "①通常出荷",
+      "changeType": "improved"
+    },
+    {
+      "yj": "2149114F1056",
+      "name": "アムバロ配合錠「ＦＦＰ」",
+      "maker": "共創未来ファーマ",
+      "from_status": "②限定出荷（自社の事情）",
+      "to_status": "①通常出荷",
+      "changeType": "improved"
+    },
+    {
+      "yj": "1124020F1041",
+      "name": "ブロマゼパム錠１ｍｇ「サンド」",
+      "maker": "サンド",
+      "from_status": "②限定出荷（自社の事情）",
+      "to_status": "①通常出荷",
+      "changeType": "improved"
+    },
+    {
+      "yj": "1124020F2056",
+      "name": "ブロマゼパム錠２ｍｇ「サンド」",
+      "maker": "サンド",
+      "from_status": "②限定出荷（自社の事情）",
+      "to_status": "①通常出荷",
+      "changeType": "improved"
+    },
+    {
+      "yj": "1124020F4059",
+      "name": "ブロマゼパム錠５ｍｇ「サンド」",
+      "maker": "サンド",
+      "from_status": "②限定出荷（自社の事情）",
+      "to_status": "①通常出荷",
+      "changeType": "improved"
+    },
+    {
+      "yj": "2649734Q1050",
+      "name": "ナボールゲル１％",
+      "maker": "久光製薬",
+      "from_status": "③限定出荷（他社品の影響）",
+      "to_status": "①通常出荷",
+      "changeType": "improved"
+    },
+    {
+      "yj": "1319742Q1055",
+      "name": "レボフロキサシン点眼液０．５％「ＦＦＰ」",
+      "maker": "共創未来ファーマ",
+      "from_status": "②限定出荷（自社の事情）",
+      "to_status": "①通常出荷",
+      "changeType": "improved"
+    }
+  ],
+  "worsened": [
+    {
+      "yj": "2499011M1108",
+      "name": "デュタステリドカプセル０．５ｍｇＡＶ「武田テバ」",
+      "maker": "Ｔ’ｓファーマ",
+      "from_status": "①通常出荷",
+      "to_status": "⑤供給停止",
+      "changeType": "worsened"
+    },
+    {
+      "yj": "1179052M1057",
+      "name": "デュロキセチンカプセル２０ｍｇ「ＫＭＰ」",
+      "maker": "共創未来ファーマ",
+      "from_status": "①通常出荷",
+      "to_status": "②限定出荷（自社の事情）",
+      "changeType": "worsened"
+    },
+    {
+      "yj": "2149042F3052",
+      "name": "テルミサルタン錠８０ｍｇ「ＦＦＰ」",
+      "maker": "共創未来ファーマ",
+      "from_status": "①通常出荷",
+      "to_status": "②限定出荷（自社の事情）",
+      "changeType": "worsened"
+    },
+    {
+      "yj": "2144006F2169",
+      "name": "リシノプリル錠１０ｍｇ「サワイ」",
+      "maker": "沢井製薬",
+      "from_status": "①通常出荷",
+      "to_status": "⑤供給停止",
+      "changeType": "worsened"
+    },
+    {
+      "yj": "6241013F2080",
+      "name": "レボフロキサシン錠２５０ｍｇ「ＴＣＫ」",
+      "maker": "辰巳化学",
+      "from_status": "①通常出荷",
+      "to_status": "⑤供給停止",
+      "changeType": "worsened"
+    },
+    {
+      "yj": "2655706N1041",
+      "name": "オキナゾールクリーム１％",
+      "maker": "田辺ファーマ",
+      "from_status": "①通常出荷",
+      "to_status": "③限定出荷（他社品の影響）",
+      "changeType": "worsened"
+    },
+    {
+      "yj": "2655707N1038",
+      "name": "エクセルダームクリーム１％",
+      "maker": "田辺ファーマ",
+      "from_status": "①通常出荷",
+      "to_status": "③限定出荷（他社品の影響）",
+      "changeType": "worsened"
+    },
+    {
+      "yj": "2190404A1307",
+      "name": "ニコリン注射液１００ｍｇ",
+      "maker": "Ｔ’ｓ製薬",
+      "from_status": "①通常出荷",
+      "to_status": "⑤供給停止",
+      "changeType": "worsened"
+    }
+  ],
+  "new_stopped": [
+    {
+      "yj": "2499011M1108",
+      "name": "デュタステリドカプセル０．５ｍｇＡＶ「武田テバ」",
+      "maker": "Ｔ’ｓファーマ",
+      "from_status": "①通常出荷",
+      "to_status": "⑤供給停止",
+      "changeType": "worsened"
+    },
+    {
+      "yj": "2144006F2169",
+      "name": "リシノプリル錠１０ｍｇ「サワイ」",
+      "maker": "沢井製薬",
+      "from_status": "①通常出荷",
+      "to_status": "⑤供給停止",
+      "changeType": "worsened"
+    },
+    {
+      "yj": "6241013F2080",
+      "name": "レボフロキサシン錠２５０ｍｇ「ＴＣＫ」",
+      "maker": "辰巳化学",
+      "from_status": "①通常出荷",
+      "to_status": "⑤供給停止",
+      "changeType": "worsened"
+    },
+    {
+      "yj": "2190404A1307",
+      "name": "ニコリン注射液１００ｍｇ",
+      "maker": "Ｔ’ｓ製薬",
+      "from_status": "①通常出荷",
+      "to_status": "⑤供給停止",
+      "changeType": "worsened"
+    }
+  ],
+  "total_new_items": 3
 }
