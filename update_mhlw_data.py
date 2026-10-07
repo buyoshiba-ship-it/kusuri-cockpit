@@ -37,6 +37,34 @@ def get_ssl_context():
 def get_headers():
     return {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
 
+import unicodedata
+
+def parse_mhlw_publish_date(title_str):
+    """
+    厚労省ページのExcelリンクタイトル（例: 医療用医薬品供給状況（令和８年10月６日現在））
+    から公式の公表日付を抽出して「YYYY年M月D日」形式で返す。
+    取得できない場合はNoneを返す（勝手な当日の日付は絶対に使わない）。
+    """
+    if not title_str:
+        return None
+    norm = unicodedata.normalize('NFKC', str(title_str))
+    
+    # 令和の元号表記: 令和X年Y月Z日
+    m_reiwa = re.search(r'令和\s*(\d+)\s*年\s*(\d+)\s*月\s*(\d+)\s*日', norm)
+    if m_reiwa:
+        reiwa_y = int(m_reiwa.group(1))
+        seireki_y = 2018 + reiwa_y
+        m = int(m_reiwa.group(2))
+        d = int(m_reiwa.group(3))
+        return f"{seireki_y}年{m}月{d}日"
+        
+    # 西暦表記: YYYY年M月D日
+    m_seireki = re.search(r'(\d{4})\s*年\s*(\d+)\s*月\s*(\d+)\s*日', norm)
+    if m_seireki:
+        return f"{m_seireki.group(1)}年{int(m_seireki.group(2))}月{int(m_seireki.group(3))}日"
+        
+    return None
+
 def fetch_latest_supply_excel_url():
     print("🔍 [供給データ] 厚生労働省の最新ページを確認中...")
     req = urllib.request.Request(MHLW_SUPPLY_URL, headers=get_headers())
@@ -53,15 +81,20 @@ def fetch_latest_supply_excel_url():
         clean_title = re.sub(r'<[^>]+>', '', title).strip()
         if "医療用医薬品供給状況" in clean_title or "kyoukyu" in href.lower() or "iyakuhin" in href.lower():
             full_url = urllib.parse.urljoin(MHLW_SUPPLY_URL, href)
+            publish_date = parse_mhlw_publish_date(clean_title)
             print(f"✅ 最新供給Excelを発見: {clean_title}")
+            print(f"📅 厚労省公式公表日: {publish_date}")
             print(f"🔗 URL: {full_url}")
-            return full_url, clean_title
+            return full_url, clean_title, publish_date
 
     # マッチしなかった場合は最初のxlsxを採用
     href, title = matches[0]
+    clean_title = title.strip()
     full_url = urllib.parse.urljoin(MHLW_SUPPLY_URL, href)
-    print(f"✅ 供給Excelを発見: {title.strip()} ({full_url})")
-    return full_url, title.strip()
+    publish_date = parse_mhlw_publish_date(clean_title)
+    print(f"✅ 供給Excelを発見: {clean_title} ({full_url})")
+    print(f"📅 厚労省公式公表日: {publish_date}")
+    return full_url, clean_title, publish_date
 
 def download_supply_excel(url):
     print("📥 最新供給状況Excelをダウンロード中...")
@@ -162,7 +195,26 @@ def parse_excel_to_dataset(excel_path, yakka_dict):
     print("⚙️ 供給状況Excelデータを解析・構造化中...")
     wb = openpyxl.load_workbook(excel_path, read_only=True)
     ws = wb.active
-    
+
+    # 統一名収載（一般名収載）対策：同規格プレフィックス（YJ先頭9桁）の薬価フォールバックマップ構築
+    prefix9_map = {}
+    prefix9_groups = {}
+    for yj, p in yakka_dict.items():
+        if len(yj) >= 9:
+            p9 = yj[:9]
+            if p9 not in prefix9_groups:
+                prefix9_groups[p9] = []
+            prefix9_groups[p9].append((yj, p))
+
+    for p9, items in prefix9_groups.items():
+        # 統一名収載コード（末尾01X番台）が存在する場合はそれを優先
+        touitsu = [p for yj, p in items if len(yj) >= 12 and yj[9:11] == '01']
+        if touitsu:
+            prefix9_map[p9] = touitsu[0]
+        else:
+            # 存在しない場合はグループ内の代表薬価を採用
+            prefix9_map[p9] = items[0][1]
+
     medicine_data = []
     
     for i, row in enumerate(ws.iter_rows(values_only=True)):
@@ -223,8 +275,10 @@ def parse_excel_to_dataset(excel_path, yakka_dict):
         else:
             st_type = 0
             
-        # 薬価 (yakka_masterから参照、存在しない場合はNone)
+        # 薬価 (個別YJコード ➔ なければ統一名収載の同規格プレフィックスで補完)
         price = yakka_dict.get(yj_code, None)
+        if price is None and len(yj_code) >= 9:
+            price = prefix9_map.get(yj_code[:9], None)
 
         medicine_data.append([
             name,         # 0
@@ -320,16 +374,18 @@ def detect_diff_and_save(new_data):
     with open(PREV_JSON_PATH, "w", encoding="utf-8") as f:
         json.dump(new_data, f, ensure_ascii=False)
 
-def export_data_js(medicine_data):
+def export_data_js(medicine_data, publish_date=None):
     print("💾 data.js を出力中...")
     json_str = json.dumps(medicine_data, ensure_ascii=False)
-    js_content = f"const MEDICINE_DATA = {json_str};\n"
+    
+    date_str_val = f'"{publish_date}"' if publish_date else 'null'
+    js_content = f"const MHLW_PUBLISH_DATE = {date_str_val};\nconst MEDICINE_DATA = {json_str};\n"
     
     with open(DATA_JS_PATH, "w", encoding="utf-8") as f:
         f.write(js_content)
         
     size_mb = os.path.getsize(DATA_JS_PATH) / (1024 * 1024)
-    print(f"🎉 data.js の更新が完了しました！（ファイルサイズ: {size_mb:.2f} MB）")
+    print(f"🎉 data.js の更新が完了しました！（公表日: {publish_date} / ファイルサイズ: {size_mb:.2f} MB）")
 
 def main():
     print("=" * 60)
@@ -340,8 +396,8 @@ def main():
         # 1. 薬価マスターの取得・更新
         yakka_dict = fetch_latest_yakka_dictionary()
 
-        # 2. 供給状況Excelの取得
-        excel_url, title = fetch_latest_supply_excel_url()
+        # 2. 供給状況Excelの取得（厚労省ページの公式公表日を正確にトレース）
+        excel_url, title, publish_date = fetch_latest_supply_excel_url()
         download_supply_excel(excel_url)
 
         # 3. 供給状況と薬価の結合解析
@@ -350,8 +406,8 @@ def main():
         # 4. 差分検知＆履歴保存
         detect_diff_and_save(dataset)
 
-        # 5. data.js 出力
-        export_data_js(dataset)
+        # 5. data.js 出力（厚労省の公式公表日を埋め込み）
+        export_data_js(dataset, publish_date)
         print("\n✨ すべての工程が正常に完了しました！")
     except Exception as e:
         print(f"\n❌ エラーが発生しました: {e}")

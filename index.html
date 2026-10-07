@@ -1752,7 +1752,7 @@
         <a href="https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/kenkou_iryou/iryou/kouhatu-iyaku/04_00003.html" target="_blank" rel="noopener noreferrer" style="color:var(--text-muted); text-decoration:underline; text-underline-offset:3px; transition:color 0.15s ease;" onmouseover="this.style.color='#2563eb'" onmouseout="this.style.color='var(--text-muted)'" title="厚生労働省の公式ページ（出典元）を新しいタブで開く">
           医療用医薬品供給状況報告（厚生労働省公表） ↗
         </a>
-        <span style="font-size:12px; color:var(--text-subtle);">| 最終更新: 2026年10月2日公表版</span>
+        <span style="font-size:12px; color:var(--text-subtle);">| 最終更新: <span id="mhlw-subtitle-date">2026年10月2日</span>公表版</span>
       </p>
 
       <!-- 供給状況全体内訳（折りたたみトグル & 採用薬監視コントロール） -->
@@ -2043,6 +2043,14 @@
       const headerCountEl = document.getElementById('header-data-count');
       if (headerCountEl) {
         headerCountEl.textContent = total.toLocaleString();
+      }
+
+      // 厚労省公式公表日の動的反映（MHLW_PUBLISH_DATEが存在する場合に反映）
+      if (typeof MHLW_PUBLISH_DATE !== 'undefined' && MHLW_PUBLISH_DATE) {
+        const updateDateEl = document.getElementById('mhlw-update-date');
+        const subtitleDateEl = document.getElementById('mhlw-subtitle-date');
+        if (updateDateEl) updateDateEl.textContent = MHLW_PUBLISH_DATE;
+        if (subtitleDateEl) subtitleDateEl.textContent = MHLW_PUBLISH_DATE;
       }
 
       const newFilterBtn = document.getElementById('filter-btn-new');
