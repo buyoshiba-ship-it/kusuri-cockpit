@@ -1,41 +1,49 @@
 {
   "improved": [
     {
-      "yj": "1179050M3077",
-      "name": "アトモキセチンカプセル２５ｍｇ「ＶＴＲＳ」",
-      "maker": "ヴィアトリス・ヘルスケア",
+      "yj": "2652701M1025",
+      "name": "５％サリチル酸ワセリン軟膏東豊",
+      "maker": "東豊薬品",
       "from_status": "②限定出荷（自社の事情）",
       "to_status": "①通常出荷",
       "changeType": "improved"
     },
     {
-      "yj": "6141001R1120",
-      "name": "エリスロシンドライシロップ１０％",
-      "maker": "ヴィアトリス・ヘルスケア",
-      "from_status": "⑤供給停止",
+      "yj": "2652701M2021",
+      "name": "１０％サリチル酸ワセリン軟膏東豊",
+      "maker": "東豊薬品",
+      "from_status": "②限定出荷（自社の事情）",
       "to_status": "①通常出荷",
       "changeType": "improved"
     },
     {
-      "yj": "6132005C1240",
-      "name": "セファクロル細粒小児用１０％「ＪＧ」",
-      "maker": "長生堂製薬",
-      "from_status": "⑤供給停止",
+      "yj": "2649734Q1069",
+      "name": "ボルタレンゲル１％",
+      "maker": "同仁医薬化工",
+      "from_status": "②限定出荷（自社の事情）",
       "to_status": "①通常出荷",
       "changeType": "improved"
     },
     {
-      "yj": "6132008C1022",
-      "name": "セフスパン細粒５０ｍｇ",
-      "maker": "長生堂製薬",
-      "from_status": "⑤供給停止",
+      "yj": "2649734Q2022",
+      "name": "ボルタレンローション１％",
+      "maker": "同仁医薬化工",
+      "from_status": "②限定出荷（自社の事情）",
       "to_status": "①通常出荷",
       "changeType": "improved"
     },
     {
-      "yj": "1179041F3362",
-      "name": "パロキセチン錠５ｍｇ「ＶＴＲＳ」",
-      "maker": "ヴィアトリス・ヘルスケア",
+      "yj": "2691702M1060",
+      "name": "マキサカルシトール軟膏２５μｇ／ｇ「タカタ」",
+      "maker": "高田製薬",
+      "from_status": "②限定出荷（自社の事情）",
+      "to_status": "①通常出荷",
+      "changeType": "improved"
+    },
+    {
+      "yj": "7122704X1250",
+      "name": "親水クリーム「東豊」",
+      "maker": "東豊薬品",
       "from_status": "③限定出荷（他社品の影響）",
       "to_status": "①通常出荷",
       "changeType": "improved"
@@ -43,103 +51,23 @@
   ],
   "worsened": [
     {
-      "yj": "2190101F1063",
-      "name": "アマルエット配合錠１番「ＴＣＫ」",
-      "maker": "辰巳化学",
-      "from_status": "①通常出荷",
+      "yj": "4490028R1066",
+      "name": "レボセチリジン塩酸塩ドライシロップ０．５％「日本臓器」",
+      "maker": "日本臓器製薬",
+      "from_status": "②限定出荷（自社の事情）",
       "to_status": "⑤供給停止",
-      "changeType": "worsened"
-    },
-    {
-      "yj": "2190103F1062",
-      "name": "アマルエット配合錠３番「ＴＣＫ」",
-      "maker": "辰巳化学",
-      "from_status": "①通常出荷",
-      "to_status": "⑤供給停止",
-      "changeType": "worsened"
-    },
-    {
-      "yj": "2190104F1067",
-      "name": "アマルエット配合錠４番「ＴＣＫ」",
-      "maker": "辰巳化学",
-      "from_status": "①通常出荷",
-      "to_status": "⑤供給停止",
-      "changeType": "worsened"
-    },
-    {
-      "yj": "3323701X3136",
-      "name": "トロンビン経口・外用剤５千「Ｆ」",
-      "maker": "富士製薬工業",
-      "from_status": "①通常出荷",
-      "to_status": "⑤供給停止",
-      "changeType": "worsened"
-    },
-    {
-      "yj": "3323701X4124",
-      "name": "トロンビン経口・外用剤１万「Ｆ」",
-      "maker": "富士製薬工業",
-      "from_status": "①通常出荷",
-      "to_status": "⑤供給停止",
-      "changeType": "worsened"
-    },
-    {
-      "yj": "6399436A2022",
-      "name": "トシリズマブＢＳ点滴静注２００ｍｇ「ＭＡ」",
-      "maker": "持田製薬",
-      "from_status": "①通常出荷",
-      "to_status": "③限定出荷（他社品の影響）",
-      "changeType": "worsened"
-    },
-    {
-      "yj": "6399436A3029",
-      "name": "トシリズマブＢＳ点滴静注４００ｍｇ「ＭＡ」",
-      "maker": "持田製薬",
-      "from_status": "①通常出荷",
-      "to_status": "③限定出荷（他社品の影響）",
       "changeType": "worsened"
     }
   ],
   "new_stopped": [
     {
-      "yj": "2190101F1063",
-      "name": "アマルエット配合錠１番「ＴＣＫ」",
-      "maker": "辰巳化学",
-      "from_status": "①通常出荷",
-      "to_status": "⑤供給停止",
-      "changeType": "worsened"
-    },
-    {
-      "yj": "2190103F1062",
-      "name": "アマルエット配合錠３番「ＴＣＫ」",
-      "maker": "辰巳化学",
-      "from_status": "①通常出荷",
-      "to_status": "⑤供給停止",
-      "changeType": "worsened"
-    },
-    {
-      "yj": "2190104F1067",
-      "name": "アマルエット配合錠４番「ＴＣＫ」",
-      "maker": "辰巳化学",
-      "from_status": "①通常出荷",
-      "to_status": "⑤供給停止",
-      "changeType": "worsened"
-    },
-    {
-      "yj": "3323701X3136",
-      "name": "トロンビン経口・外用剤５千「Ｆ」",
-      "maker": "富士製薬工業",
-      "from_status": "①通常出荷",
-      "to_status": "⑤供給停止",
-      "changeType": "worsened"
-    },
-    {
-      "yj": "3323701X4124",
-      "name": "トロンビン経口・外用剤１万「Ｆ」",
-      "maker": "富士製薬工業",
-      "from_status": "①通常出荷",
+      "yj": "4490028R1066",
+      "name": "レボセチリジン塩酸塩ドライシロップ０．５％「日本臓器」",
+      "maker": "日本臓器製薬",
+      "from_status": "②限定出荷（自社の事情）",
       "to_status": "⑤供給停止",
       "changeType": "worsened"
     }
   ],
-  "total_new_items": 1
+  "total_new_items": 0
 }
