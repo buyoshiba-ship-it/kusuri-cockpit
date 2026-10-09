@@ -1,70 +1,69 @@
 {
-  "improved": [
-    {
-      "yj": "2652701M1025",
-      "name": "５％サリチル酸ワセリン軟膏東豊",
-      "maker": "東豊薬品",
-      "from_status": "②限定出荷（自社の事情）",
-      "to_status": "①通常出荷",
-      "changeType": "improved"
-    },
-    {
-      "yj": "2652701M2021",
-      "name": "１０％サリチル酸ワセリン軟膏東豊",
-      "maker": "東豊薬品",
-      "from_status": "②限定出荷（自社の事情）",
-      "to_status": "①通常出荷",
-      "changeType": "improved"
-    },
-    {
-      "yj": "2649734Q1069",
-      "name": "ボルタレンゲル１％",
-      "maker": "同仁医薬化工",
-      "from_status": "②限定出荷（自社の事情）",
-      "to_status": "①通常出荷",
-      "changeType": "improved"
-    },
-    {
-      "yj": "2649734Q2022",
-      "name": "ボルタレンローション１％",
-      "maker": "同仁医薬化工",
-      "from_status": "②限定出荷（自社の事情）",
-      "to_status": "①通常出荷",
-      "changeType": "improved"
-    },
-    {
-      "yj": "2691702M1060",
-      "name": "マキサカルシトール軟膏２５μｇ／ｇ「タカタ」",
-      "maker": "高田製薬",
-      "from_status": "②限定出荷（自社の事情）",
-      "to_status": "①通常出荷",
-      "changeType": "improved"
-    },
-    {
-      "yj": "7122704X1250",
-      "name": "親水クリーム「東豊」",
-      "maker": "東豊薬品",
-      "from_status": "③限定出荷（他社品の影響）",
-      "to_status": "①通常出荷",
-      "changeType": "improved"
-    }
-  ],
+  "improved": [],
   "worsened": [
     {
-      "yj": "4490028R1066",
-      "name": "レボセチリジン塩酸塩ドライシロップ０．５％「日本臓器」",
-      "maker": "日本臓器製薬",
-      "from_status": "②限定出荷（自社の事情）",
+      "yj": "1179046F4035",
+      "name": "セルトラリンＯＤ錠２５ｍｇ「アメル」",
+      "maker": "共和薬品工業",
+      "from_status": "①通常出荷",
+      "to_status": "②限定出荷（自社の事情）",
+      "changeType": "worsened"
+    },
+    {
+      "yj": "1179046F5031",
+      "name": "セルトラリンＯＤ錠５０ｍｇ「アメル」",
+      "maker": "共和薬品工業",
+      "from_status": "①通常出荷",
+      "to_status": "②限定出荷（自社の事情）",
+      "changeType": "worsened"
+    },
+    {
+      "yj": "2649801M1028",
+      "name": "グリメサゾン軟膏",
+      "maker": "藤永製薬",
+      "from_status": "①通常出荷",
       "to_status": "⑤供給停止",
+      "changeType": "worsened"
+    },
+    {
+      "yj": "264970AM1020",
+      "name": "グリテール",
+      "maker": "藤永製薬",
+      "from_status": "①通常出荷",
+      "to_status": "⑤供給停止",
+      "changeType": "worsened"
+    },
+    {
+      "yj": "2190404H4118",
+      "name": "ニコリンＨ注射液０．５ｇ",
+      "maker": "Ｔ’ｓ製薬",
+      "from_status": "①通常出荷",
+      "to_status": "②限定出荷（自社の事情）",
+      "changeType": "worsened"
+    },
+    {
+      "yj": "2190404H5084",
+      "name": "ニコリンＨ注射液１ｇ",
+      "maker": "Ｔ’ｓ製薬",
+      "from_status": "①通常出荷",
+      "to_status": "②限定出荷（自社の事情）",
       "changeType": "worsened"
     }
   ],
   "new_stopped": [
     {
-      "yj": "4490028R1066",
-      "name": "レボセチリジン塩酸塩ドライシロップ０．５％「日本臓器」",
-      "maker": "日本臓器製薬",
-      "from_status": "②限定出荷（自社の事情）",
+      "yj": "2649801M1028",
+      "name": "グリメサゾン軟膏",
+      "maker": "藤永製薬",
+      "from_status": "①通常出荷",
+      "to_status": "⑤供給停止",
+      "changeType": "worsened"
+    },
+    {
+      "yj": "264970AM1020",
+      "name": "グリテール",
+      "maker": "藤永製薬",
+      "from_status": "①通常出荷",
       "to_status": "⑤供給停止",
       "changeType": "worsened"
     }
