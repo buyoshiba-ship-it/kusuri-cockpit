@@ -2,8 +2,10 @@ name: Daily MHLW Medicine Supply Auto-Updater
 
 on:
   schedule:
-    # 平日（月〜金） 日本時間 朝7:33 (UTC 日〜木 22:33) に自動実行（土日はスキップ）
-    - cron: '33 22 * * 0-4'
+    # 平日（月〜金） 日本時間 朝 05:04 (UTC 20:04), 06:07 (UTC 21:07), 07:00 (UTC 22:00) に自動実行
+    - cron: '4 20 * * 0-4'
+    - cron: '7 21 * * 0-4'
+    - cron: '0 22 * * 0-4'
   # 手動でもGitHub画面からポチッと実行できるようにする
   workflow_dispatch:
 
