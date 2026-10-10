@@ -60,25 +60,14 @@
       padding: 0 12px;
     }
 
-    /* ヘッダー */
+    /* ヘッダー: 上品でおしゃれな薄いパステル黄緑トーン */
     header {
-      margin-bottom: 20px;
-    }
-
-    .brand-tag {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-      color: var(--text-muted);
-      background: var(--surface);
-      border: 1px solid var(--border);
-      padding: 4px 10px;
-      border-radius: 9999px;
-      margin-bottom: 12px;
+      margin-bottom: 24px;
+      background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 50%, #dcfce7 100%);
+      border: 1px solid #bbf7d0;
+      border-radius: 16px;
+      padding: 24px 28px;
+      box-shadow: 0 4px 15px -3px rgba(34, 197, 94, 0.08), 0 2px 6px -2px rgba(0, 0, 0, 0.03);
     }
 
     .pulse-dot {
@@ -766,8 +755,19 @@
       border-collapse: collapse;
       font-size: 12px;
       text-align: left;
-      table-layout: auto;
+      table-layout: fixed;
     }
+
+    /* 各列の幅指定（出荷状況・出荷量・日付・採用は固定幅、品名と成分名・理由に柔軟幅を配分） */
+    .med-table th:nth-child(1), .med-table td:nth-child(1) { width: 56px; }   /* 採用 */
+    .med-table th:nth-child(2), .med-table td:nth-child(2) { width: 220px; }  /* 品名/製造販売業者 (短め設定で改行) */
+    .med-table th:nth-child(3), .med-table td:nth-child(3) { width: 170px; }  /* 成分名 */
+    .med-table th:nth-child(4), .med-table td:nth-child(4) { width: 105px; min-width: 105px; }  /* 出荷状況（固定） */
+    .med-table th:nth-child(5), .med-table td:nth-child(5) { width: 130px; }  /* 制限理由 */
+    .med-table th:nth-child(6), .med-table td:nth-child(6) { width: 110px; }  /* 見込み・復帰時期 */
+    .med-table th:nth-child(7), .med-table td:nth-child(7) { width: 100px; min-width: 100px; }  /* 出荷量（固定） */
+    .med-table th:nth-child(8), .med-table td:nth-child(8) { width: 75px; min-width: 75px; }   /* 更新日（固定） */
+    .med-table th:nth-child(9), .med-table td:nth-child(9) { width: 100px; }  /* 他社流通状況 */
 
     .med-table th {
       background: #f8fafc;
@@ -851,11 +851,10 @@
     .tbl-med-name {
       font-weight: 600;
       color: #2563eb;
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 4px;
+      display: inline-block;
       line-height: 1.35;
+      word-break: break-word;
+      overflow-wrap: break-word;
       cursor: pointer;
     }
     .tbl-med-name:hover {
@@ -1738,10 +1737,6 @@
 
   <div class="container">
     <header>
-      <div class="brand-tag">
-        <span class="pulse-dot"></span>
-        厚労省 最新公表: <span id="mhlw-update-date">-年-月-日</span>（<span id="header-data-count">16,405</span>品目連動）
-      </div>
       <div class="header-title-row" style="display:flex; flex-direction:column; align-items:flex-start; gap:4px; margin-bottom:12px;">
         <h1 id="app-main-title" style="margin:0; font-size:42px; font-weight:900; letter-spacing:-0.03em; line-height:1.15; color:#0f172a; text-shadow:0 1px 2px rgba(0,0,0,0.04);">医薬品供給状況ちゃんねる</h1>
         <div style="display:inline-flex; align-items:center; gap:8px;">
@@ -1966,7 +1961,7 @@
     let currentMode = 'all';
     let currentFilter = 'all';
     let currentDateFilter = 'all'; // 'all', '7', '14', '30'
-    let currentSortField = 'default'; // 'default', 'date', 'status', 'name', 'ingredient', 'volume'
+    let currentSortField = 'date'; // デフォルトで「更新日（新しい順）」に設定
     let currentSortOrder = 'desc'; // 'asc' または 'desc'
     const isMobileDevice = window.innerWidth <= 768;
     let currentViewMode = isMobileDevice ? 'card' : 'table'; // PCはテーブル、スマホはカードをデフォルトに自動判定
